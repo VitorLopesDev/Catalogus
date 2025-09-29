@@ -1,52 +1,37 @@
 package io.thalita.vitor.catalogus.controller;
 
-import io.thalita.vitor.catalogus.service.AuthService;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import io.thalita.vitor.catalogus.service.UserService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/auth")
+@Controller
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final UserService userService;
 
-    @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
-        boolean success = authService.login(request.getEmail(), request.getPassword());
-        return success ? "Login realizado com sucesso!" : "Credenciais inválidas.";
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login"; // templates/login.html
+    }
+
+    @GetMapping("/register")
+    public String registerPage() {
+        return "register"; // templates/register.html
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
-        try {
-            authService.register(request.getEmail(), request.getPassword());
-            return "Usuário registrado com sucesso!";
-        } catch (Exception e) {
-            return e.getMessage();
-        }
+    public String registerUser(@RequestParam String username,
+                               @RequestParam String password) {
+        userService.registerUser(username, password);
+        return "redirect:/login";
     }
-}
 
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
-class LoginRequest {
-    private String email;
-    private String password;
-    // getters e setters
-}
-
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
-class RegisterRequest {
-    private String email;
-    private String password;
-    // getters e setters
+    @GetMapping("/home")
+    public String homePage() {
+        return "home";
+    }
 }

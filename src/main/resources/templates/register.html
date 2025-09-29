@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Registrar - Catalogus</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="card">
+    <h2>Criar conta</h2>
+
+    <div th:if="${error}" class="alert" th:text="${error}"></div>
+
+    <form th:action="@{/register}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <label>Usuário</label>
+        <input type="text" name="username" required/>
+
+        <label>Senha</label>
+        <input type="password" name="password" required/>
+
+        <button type="submit">Registrar</button>
+    </form>
+
+    <p>Já tem conta? <a th:href="@{/login}">Entrar</a></p>
+</div>
+</body>
+</html>
