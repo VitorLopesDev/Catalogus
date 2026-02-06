@@ -1,10 +1,6 @@
 package io.thalita.vitor.catalogus.controller;
 
 import io.thalita.vitor.catalogus.service.AuthService;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,20 +29,4 @@ public class AuthController {
             return e.getMessage();
         }
     }
-}
-
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
-class LoginRequest {
-    private String email;
-    private String password;
-    // getters e setters
-}
-
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
-class RegisterRequest {
-    private String email;
-    private String password;
-    // getters e setters
 }

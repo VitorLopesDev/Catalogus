@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Desabilita CSRF para APIs REST
                 .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Permite o uso de frames (necessário pro H2 Console)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/h2-console/**").permitAll() // Rotas liberadas
+                        .requestMatchers("/auth/login", "/auth/register", "/h2-console/**", "/book/**").permitAll() // Rotas liberadas
                         .anyRequest().authenticated() // Outras rotas precisam de login
                 )
                 .httpBasic(basic -> {}); // Autenticação básica temporária (vamos trocar por JWT depois)
