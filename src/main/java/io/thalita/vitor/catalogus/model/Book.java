@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.time.LocalDate;
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -23,4 +21,6 @@ public class Book {
     @NonNull
     private String author;
     private String isbn;
+    private String description;
+
 }

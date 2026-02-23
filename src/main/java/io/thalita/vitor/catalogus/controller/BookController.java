@@ -1,30 +1,57 @@
 package io.thalita.vitor.catalogus.controller;
 
+import io.thalita.vitor.catalogus.dto.BookRequestDTO;
+import io.thalita.vitor.catalogus.dto.BookResponseDTO;
 import io.thalita.vitor.catalogus.model.Book;
-import io.thalita.vitor.catalogus.repository.BookRepository;
+import io.thalita.vitor.catalogus.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/book")
 public class BookController {
 
     @Autowired
-    private BookRepository bookRepository;
+    private BookService bookService;
 
+    @GetMapping("/list")
+    public ResponseEntity<List<Book>> listBooks(){
+        List<Book> books = bookService.findAllBooks();
 
-    @PostMapping("/addbook")
-    public ResponseEntity addBook(@RequestBody Book book){
-        var findBook = this.bookRepository.findByTitle(book.getTitle());
-        if(findBook != null){
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Livro já cadastrado!");
+        if(books.isEmpty()){
+            return ResponseEntity.noContent().build();
         }
-        var bookSave = this.bookRepository.save(book);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookSave);
+        return ResponseEntity.ok(books);
     }
+
+
+    @PostMapping
+    public ResponseEntity<?> addBook(@RequestBody BookRequestDTO dto){
+        Book response = bookService.createBook(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/{title}")
+    public ResponseEntity<Void> deleteBook(@PathVariable String title){
+        bookService.deleteBook(title);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{title}")
+    public ResponseEntity<Book> findBook(@PathVariable String title){
+        Book book = bookService.findBookByTitle(title);
+        return ResponseEntity.ok().body(book);
+    }
+
+    @PutMapping("/{title}")
+    public ResponseEntity<Book> replaceBook(@RequestBody BookRequestDTO dto){
+        Book book = bookService.replaceBook(dto);
+        return ResponseEntity.ok().body(book);
+    }
+
 }

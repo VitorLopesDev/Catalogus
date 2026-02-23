@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogus - Meus Livros</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>📚 Catalogus</h1>
+            <button onclick="logout()" class="btn btn-secondary">Sair</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <h2>Minha Biblioteca</h2>
+                <button onclick="showAddBookForm()" class="btn btn-primary">+ Adicionar Livro</button>
+            </div>
+
+            <!-- Formulário para adicionar/editar livro -->
+            <div id="bookFormContainer" class="book-form-container" style="display: none;">
+                <div class="book-form">
+                    <div class="form-header">
+                        <h3 id="formTitle">Adicionar Novo Livro</h3>
+                        <button onclick="hideBookForm()" class="btn-close">✕</button>
+                    </div>
+                    <form id="bookForm">
+                        <input type="hidden" id="bookId">
+                        <div class="form-group">
+                            <label for="bookTitle">Título *</label>
+                            <input type="text" id="bookTitle" required placeholder="Ex: Dom Casmurro">
+                        </div>
+                        <div class="form-group">
+                            <label for="bookAuthor">Autor *</label>
+                            <input type="text" id="bookAuthor" required placeholder="Ex: Machado de Assis">
+                        </div>
+                        <div class="form-group">
+                            <label for="bookIsbn">ISBN</label>
+                            <input type="text" id="bookIsbn" placeholder="Ex: 978-3-16-148410-0">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" onclick="hideBookForm()" class="btn btn-secondary">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de livros -->
+            <div id="booksContainer" class="books-container">
+                <div class="loading">Carregando livros...</div>
+            </div>
+
+            <!-- Mensagem quando não há livros -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <p>📚 Sua biblioteca está vazia</p>
+                <p class="empty-subtitle">Comece adicionando seu primeiro livro!</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

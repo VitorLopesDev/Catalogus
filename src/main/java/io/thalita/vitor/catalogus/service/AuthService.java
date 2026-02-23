@@ -27,14 +27,15 @@ public class AuthService {
         return passwordEncoder.matches(password, user.getPassword());
     }
 
-    public void register(String username, String password) {
-        if (userRepository.findByEmail(username) != null) {
+    public void register(String email, String password) {
+        if (userRepository.findByEmail(email) != null) {
             throw new RuntimeException("Usuário já existe");
         }
 
         User user = new User();
-        user.setEmail(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
+        user.setRole("ROLE_USER");
 
         userRepository.save(user);
     }
