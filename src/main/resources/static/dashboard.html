@@ -3,68 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalogus - Meus Livros</title>
+    <title>Catalogus — Minha Biblioteca</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <h1>📚 Catalogus</h1>
-            <button onclick="logout()" class="btn btn-secondary">Sair</button>
+
+<!-- ============================================================
+     NAVBAR — agora com barra de busca centralizada
+     A busca fica na navbar para estar sempre visível,
+     mesmo que o usuário role a página.
+     ============================================================ -->
+<nav class="navbar">
+    <div class="nav-container">
+
+        <div class="nav-left">
+            <span class="nav-quill">✒</span>
+            <span class="nav-brand">Catalogus</span>
         </div>
-    </nav>
 
-    <div class="container">
-        <div class="dashboard">
-            <div class="dashboard-header">
-                <h2>Minha Biblioteca</h2>
-                <button onclick="showAddBookForm()" class="btn btn-primary">+ Adicionar Livro</button>
+        <!-- NAV-CENTER: busca em tempo real
+             oninput dispara a cada letra digitada,
+             diferente de onchange que só dispara ao perder foco -->
+        <div class="nav-center">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input
+                        type="text"
+                        id="campoBusca"
+                        class="search-input"
+                        placeholder="Buscar por título ou autor..."
+                        oninput="filtrarLivros(this.value)"
+                >
+                <!-- Botão limpar — exibido pelo JS quando há texto -->
+                <button
+                        id="btnLimparBusca"
+                        class="btn-limpar-busca"
+                        onclick="limparBusca()"
+                        style="display: none;"
+                >✕</button>
             </div>
+        </div>
 
-            <!-- Formulário para adicionar/editar livro -->
-            <div id="bookFormContainer" class="book-form-container" style="display: none;">
-                <div class="book-form">
-                    <div class="form-header">
-                        <h3 id="formTitle">Adicionar Novo Livro</h3>
-                        <button onclick="hideBookForm()" class="btn-close">✕</button>
-                    </div>
-                    <form id="bookForm">
-                        <input type="hidden" id="bookId">
-                        <div class="form-group">
-                            <label for="bookTitle">Título *</label>
-                            <input type="text" id="bookTitle" required placeholder="Ex: Dom Casmurro">
-                        </div>
-                        <div class="form-group">
-                            <label for="bookAuthor">Autor *</label>
-                            <input type="text" id="bookAuthor" required placeholder="Ex: Machado de Assis">
-                        </div>
-                        <div class="form-group">
-                            <label for="bookIsbn">ISBN</label>
-                            <input type="text" id="bookIsbn" placeholder="Ex: 978-3-16-148410-0">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" onclick="hideBookForm()" class="btn btn-secondary">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
-                        </div>
-                    </form>
+        <div class="nav-right">
+            <span id="navUserEmail" class="nav-user"></span>
+            <button onclick="logout()" class="btn-logout">Sair ↩</button>
+        </div>
+
+    </div>
+</nav>
+
+<div class="page-wrapper dashboard-wrapper">
+    <div class="dashboard-container">
+
+        <!-- ============================================================
+             LINHA DE ESTATÍSTICAS
+             Três cards com números calculados pelo JS a partir
+             da lista de livros carregada do backend.
+             ============================================================ -->
+        <div class="stats-row">
+
+            <div class="stat-card">
+                <span class="stat-icon">📚</span>
+                <div class="stat-info">
+                    <span id="statTotal" class="stat-number">—</span>
+                    <span class="stat-label">Obras no Acervo</span>
                 </div>
             </div>
 
-            <!-- Lista de livros -->
-            <div id="booksContainer" class="books-container">
-                <div class="loading">Carregando livros...</div>
+            <div class="stat-card">
+                <span class="stat-icon">✒</span>
+                <div class="stat-info">
+                    <span id="statAutores" class="stat-number">—</span>
+                    <span class="stat-label">Autores Distintos</span>
+                </div>
             </div>
 
-            <!-- Mensagem quando não há livros -->
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <p>📚 Sua biblioteca está vazia</p>
-                <p class="empty-subtitle">Comece adicionando seu primeiro livro!</p>
+            <div class="stat-card">
+                <span class="stat-icon">🔖</span>
+                <div class="stat-info">
+                    <span id="statIsbn" class="stat-number">—</span>
+                    <span class="stat-label">Com ISBN</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- HEADER: título + botão adicionar -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h2 class="dashboard-title">Minha Biblioteca</h2>
+                <span id="bookCount" class="book-count">carregando...</span>
+            </div>
+            <button onclick="abrirModal()" class="btn-adicionar">
+                + Adicionar Obra
+            </button>
+        </div>
+
+        <div class="divider" style="margin-bottom: 32px;">
+            <span class="divider-line"></span>
+            <span class="divider-ornament">❦</span>
+            <span class="divider-line"></span>
+        </div>
+
+        <!-- Resultado vazio de busca -->
+        <div id="semResultados" class="sem-resultados" style="display: none;">
+            <span class="empty-icon">🔍</span>
+            <p class="empty-title">Nenhuma obra encontrada</p>
+            <p class="empty-subtitle">Tente buscar por outro título ou autor</p>
+        </div>
+
+        <!-- GRID DE LIVROS -->
+        <div id="booksGrid" class="books-grid">
+            <div class="loading-state">
+                <span class="loading-quill">✒</span>
+                <p>Consultando o acervo...</p>
             </div>
         </div>
+
+        <!-- Estado vazio -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">📚</span>
+            <p class="empty-title">Acervo vazio</p>
+            <p class="empty-subtitle">Adicione sua primeira obra ao catálogo</p>
+        </div>
+
     </div>
+</div>
 
-    <div id="message" class="message"></div>
+<!-- MODAL -->
+<div id="modalOverlay" class="modal-overlay" onclick="fecharModalFora(event)">
+    <div class="modal-box">
 
-    <script src="dashboard.js"></script>
+        <div class="modal-header">
+            <h3 id="modalTitulo" class="modal-titulo">Nova Obra</h3>
+            <button onclick="fecharModal()" class="btn-fechar">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <form id="livroForm" novalidate>
+
+                <div class="form-group">
+                    <label for="campoTitulo">Título *</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📖</span>
+                        <input type="text" id="campoTitulo" placeholder="Ex: Dom Casmurro" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="campoAutor">Autor *</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✒</span>
+                        <input type="text" id="campoAutor" placeholder="Ex: Machado de Assis" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="campoIsbn">ISBN</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔖</span>
+                        <input type="text" id="campoIsbn" placeholder="Ex: 978-3-16-148410-0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="campoDescricao">Descrição</label>
+                    <textarea
+                            id="campoDescricao"
+                            class="campo-textarea"
+                            placeholder="Uma breve sinopse da obra..."
+                            rows="3"
+                    ></textarea>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button onclick="fecharModal()" class="btn-cancelar">Cancelar</button>
+            <button onclick="salvarLivro()" class="btn-salvar">
+                <span id="btnSalvarTexto">Registrar Obra</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div id="message" class="message" role="alert" aria-live="polite"></div>
+
+<script src="dashboard.js"></script>
 </body>
 </html>

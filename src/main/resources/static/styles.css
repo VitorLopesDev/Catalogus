@@ -1,392 +1,1871 @@
-/* Reset e configurações globais */
-* {
+/* ============================================================
+   CATALOGUS — styles.css
+   Tema: Clássico Literário
+
+   ORGANIZAÇÃO DO ARQUIVO:
+   1. Variáveis CSS (paleta, fontes, espaçamentos)
+   2. Reset e base
+   3. Textura de fundo (page-wrapper)
+   4. Decorações de fundo
+   5. Container central (login-container)
+   6. Header (logo, título)
+   7. Divisor decorativo
+   8. Abas (tab-switcher)
+   9. Formulários e inputs
+   10. Botão de submit
+   11. Mensagem de feedback
+   12. Animações
+   13. Responsividade
+   ============================================================ */
+
+
+/* ============================================================
+   1. VARIÁVEIS CSS
+   Definir variáveis no :root permite reutilizá-las em todo o
+   arquivo. Se quiser mudar a cor primária, basta alterar aqui.
+   ============================================================ */
+:root {
+    /* Paleta principal */
+    --cor-papel:       #f5f0e8;   /* bege papel envelhecido */
+    --cor-papel-escuro:#ede5d0;   /* bege mais escuro para bordas */
+    --cor-couro:       #8b4513;   /* marrom couro — cor primária */
+    --cor-couro-escuro:#6b3410;   /* marrom mais escuro para hover */
+    --cor-dourado:     #c9a84c;   /* dourado — detalhes e ornamentos */
+    --cor-tinta:       #2c1810;   /* quase preto — texto principal */
+    --cor-tinta-suave: #6b5344;   /* marrom médio — texto secundário */
+    --cor-sucesso:     #4a7c59;   /* verde musgo — mensagem de sucesso */
+    --cor-erro:        #8b2635;   /* vermelho vinho — mensagem de erro */
+
+    /* Fontes */
+    --fonte-titulo: 'Playfair Display', Georgia, serif;
+    --fonte-corpo:  'Lora', 'Times New Roman', serif;
+
+    /* Sombras */
+    --sombra-container: 0 20px 60px rgba(44, 24, 16, 0.25),
+                        0 4px 15px rgba(44, 24, 16, 0.15);
+}
+
+
+/* ============================================================
+   2. RESET E BASE
+   Zeramos margens e padding padrão do navegador e definimos
+   box-sizing: border-box — isso faz padding e border serem
+   incluídos no tamanho total do elemento (mais intuitivo).
+   ============================================================ */
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: var(--fonte-corpo);
+    color: var(--cor-tinta);
     min-height: 100vh;
-    color: #333;
 }
 
-/* Container principal */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+
+/* ============================================================
+   3. TEXTURA DE FUNDO (page-wrapper)
+
+   Usamos três camadas de background sobrepostas:
+   - Camada 1: linhas horizontais finíssimas (grão do papel)
+   - Camada 2: gradiente diagonal suave (profundidade)
+   - Cor base: bege papel
+
+   No CSS, múltiplos background-image são separados por vírgula,
+   e a primeira declarada fica na frente das outras.
+   ============================================================ */
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+
+    background-color: var(--cor-papel);
+    background-image:
+        /* Linhas horizontais sutis imitando fibras do papel */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 3px,
+            rgba(44, 24, 16, 0.012) 3px,
+            rgba(44, 24, 16, 0.012) 4px
+        ),
+        /* Gradiente diagonal para profundidade */
+        linear-gradient(
+            135deg,
+            #ede5d0 0%,
+            #f5f0e8 40%,
+            #ede8d5 100%
+        );
 }
 
-/* Navbar */
+
+/* ============================================================
+   4. DECORAÇÕES DE FUNDO
+
+   Caracteres tipográficos ornamentais (❧) posicionados nas
+   laterais com position: absolute e opacity baixa.
+   Pointer-events: none garante que não atrapalhem os cliques.
+   ============================================================ */
+.bg-decoration {
+    position: absolute;
+    font-size: 180px;
+    color: var(--cor-dourado);
+    opacity: 0.07;
+    pointer-events: none;
+    font-family: var(--fonte-titulo);
+    line-height: 1;
+    user-select: none;
+}
+
+.bg-deco-left {
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-15deg);
+}
+
+.bg-deco-right {
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%) rotate(15deg) scaleX(-1);
+}
+
+
+/* ============================================================
+   5. CONTAINER CENTRAL (login-container)
+
+   position: relative + z-index: 1 garante que ele fique
+   acima das decorações de fundo (que têm z-index padrão).
+
+   A borda dupla com outline cria o efeito de moldura clássica.
+   ============================================================ */
+.login-container {
+    background-color: var(--cor-papel);
+    background-image: linear-gradient(
+        160deg,
+        rgba(255,255,255,0.6) 0%,
+        transparent 60%
+    );
+
+    border: 2px solid var(--cor-dourado);
+    /* Borda interna extra: outline com offset negativo simularia
+       moldura dupla, mas usamos box-shadow para mais controle */
+    box-shadow:
+        var(--sombra-container),
+        inset 0 0 0 4px var(--cor-papel),
+        inset 0 0 0 6px rgba(201, 168, 76, 0.3);
+
+    border-radius: 4px;
+    padding: 48px 52px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    z-index: 1;
+
+    /* Animação de entrada — definida na seção 12 */
+    animation: fadeInUp 0.6s ease both;
+}
+
+/* Cantos decorativos usando pseudo-elementos ::before e ::after
+   Pseudo-elementos são elementos virtuais criados com CSS,
+   sem precisar de HTML adicional. */
+.login-container::before,
+.login-container::after {
+    content: '✦';
+    position: absolute;
+    font-size: 14px;
+    color: var(--cor-dourado);
+    opacity: 0.7;
+}
+
+.login-container::before {
+    top: 10px;
+    left: 14px;
+}
+
+.login-container::after {
+    bottom: 10px;
+    right: 14px;
+}
+
+
+/* ============================================================
+   6. HEADER — Logo e título
+   ============================================================ */
+.login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.quill-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 8px;
+    /* Animação de balanço suave — keyframe definido na seção 12 */
+    animation: gentleRock 4s ease-in-out infinite;
+    transform-origin: bottom center;
+}
+
+.brand-title {
+    font-family: var(--fonte-titulo);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--cor-couro);
+    letter-spacing: 3px;
+    /* text-shadow cria um sutil efeito de profundidade */
+    text-shadow: 1px 2px 4px rgba(44, 24, 16, 0.15);
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    /* font-style: italic dá o toque literário */
+    font-style: italic;
+}
+
+
+/* ============================================================
+   7. DIVISOR DECORATIVO
+
+   Flex com align-items: center centraliza verticalmente o
+   ornamento (❦) entre as duas linhas.
+   ============================================================ */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.divider-line {
+    flex: 1;           /* ocupa todo espaço disponível */
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cor-dourado),
+        transparent
+    );
+}
+
+.divider-ornament {
+    font-size: 20px;
+    color: var(--cor-dourado);
+    line-height: 1;
+    /* Rotação de 90° deixa o ornamento ❦ mais elegante */
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+
+/* ============================================================
+   8. ABAS (tab-switcher)
+
+   As abas alternam entre os painéis via JavaScript.
+   A classe .active é adicionada/removida pelo JS.
+   ============================================================ */
+.tab-switcher {
+    display: flex;
+    border-bottom: 2px solid var(--cor-papel-escuro);
+    margin-bottom: 28px;
+    gap: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    /* Margin-bottom negativo: o border-bottom do botão
+       sobrepõe o border-bottom do container pai */
+    margin-bottom: -2px;
+    padding: 10px;
+    font-family: var(--fonte-titulo);
+    font-size: 16px;
+    color: var(--cor-tinta-suave);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.tab-btn:hover {
+    color: var(--cor-couro);
+}
+
+.tab-btn.active {
+    color: var(--cor-couro);
+    border-bottom-color: var(--cor-dourado);
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   9. FORMULÁRIOS E INPUTS
+   ============================================================ */
+
+/* Cada grupo label + input */
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* .input-wrapper envolve o ícone + o input com position: relative,
+   permitindo posicionar o ícone absolutamente dentro dele */
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;  /* não bloqueia cliques no input */
+    opacity: 0.5;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 13px 16px 13px 42px;  /* padding-left maior por causa do ícone */
+    background: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid var(--cor-papel-escuro);
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
+    color: var(--cor-tinta);
+    transition: all 0.3s ease;
+    /* appearance: none remove estilos padrão do navegador */
+    appearance: none;
+}
+
+/* Estado de foco — :focus é ativado quando o input está selecionado */
+.form-group input:focus {
+    outline: none;
+    border-color: var(--cor-dourado);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+/* Placeholder — texto de dica dentro do input */
+.form-group input::placeholder {
+    color: var(--cor-tinta-suave);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+
+/* ============================================================
+   10. BOTÃO DE SUBMIT
+   ============================================================ */
+.btn-submit {
+    width: 100%;
+    padding: 14px 24px;
+    margin-top: 8px;
+
+    /* Gradiente de marrom couro */
+    background: linear-gradient(
+        135deg,
+        var(--cor-couro) 0%,
+        var(--cor-couro-escuro) 100%
+    );
+    color: var(--cor-papel);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+
+    font-family: var(--fonte-titulo);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+
+    /* display: flex permite alinhar o texto e a seta */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Brilho animado que passa pelo botão ao fazer hover */
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.15),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.btn-submit:hover {
+    background: linear-gradient(
+        135deg,
+        var(--cor-couro-escuro) 0%,
+        #4a2008 100%
+    );
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+    letter-spacing: 3px;
+}
+
+.btn-submit:hover::before {
+    left: 100%;
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-arrow {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.btn-submit:hover .btn-arrow {
+    transform: translateX(4px);
+}
+
+
+/* ============================================================
+   11. MENSAGEM DE FEEDBACK
+   ============================================================ */
+.message {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
+    display: none;          /* escondido por padrão, JS altera para 'block' */
+    animation: fadeInUp 0.3s ease;
+}
+
+.message.success {
+    background: rgba(74, 124, 89, 0.12);
+    border: 1px solid rgba(74, 124, 89, 0.4);
+    color: var(--cor-sucesso);
+}
+
+.message.error {
+    background: rgba(139, 38, 53, 0.1);
+    border: 1px solid rgba(139, 38, 53, 0.35);
+    color: var(--cor-erro);
+}
+
+.message.info {
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    color: var(--cor-couro);
+}
+
+
+/* ============================================================
+   12. PAINÉIS DE FORMULÁRIO
+   Apenas o painel .active é exibido.
+   ============================================================ */
+.form-panel {
+    display: none;
+}
+
+.form-panel.active {
+    display: block;
+    animation: fadeInUp 0.35s ease both;
+}
+
+
+/* ============================================================
+   13. ANIMAÇÕES (keyframes)
+
+   @keyframes define os estados de uma animação nomeada.
+   Depois ela é aplicada com a propriedade animation: nome duração.
+   ============================================================ */
+
+/* Entrada suave vindo de baixo */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Balanço suave da pena */
+@keyframes gentleRock {
+    0%, 100% { transform: rotate(-5deg); }
+    50%       { transform: rotate(5deg); }
+}
+
+
+/* ============================================================
+   14. RESPONSIVIDADE
+
+   @media (max-width: Xpx) aplica estilos apenas quando a tela
+   for menor que X pixels — essencial para mobile.
+   ============================================================ */
+@media (max-width: 520px) {
+    .login-container {
+        padding: 36px 28px;
+    }
+
+    .brand-title {
+        font-size: 34px;
+    }
+
+    .bg-decoration {
+        font-size: 100px;
+        opacity: 0.04;
+    }
+}
+/* ============================================================
+   CATALOGUS — styles.css
+   Tema: Clássico Literário
+
+   ORGANIZAÇÃO DO ARQUIVO:
+   1. Variáveis CSS (paleta, fontes, espaçamentos)
+   2. Reset e base
+   3. Textura de fundo (page-wrapper)
+   4. Decorações de fundo
+   5. Container central (login-container)
+   6. Header (logo, título)
+   7. Divisor decorativo
+   8. Abas (tab-switcher)
+   9. Formulários e inputs
+   10. Botão de submit
+   11. Mensagem de feedback
+   12. Animações
+   13. Responsividade
+   ============================================================ */
+
+
+/* ============================================================
+   1. VARIÁVEIS CSS
+   Definir variáveis no :root permite reutilizá-las em todo o
+   arquivo. Se quiser mudar a cor primária, basta alterar aqui.
+   ============================================================ */
+:root {
+    /* Paleta principal */
+    --cor-papel:       #f5f0e8;   /* bege papel envelhecido */
+    --cor-papel-escuro:#ede5d0;   /* bege mais escuro para bordas */
+    --cor-couro:       #8b4513;   /* marrom couro — cor primária */
+    --cor-couro-escuro:#6b3410;   /* marrom mais escuro para hover */
+    --cor-dourado:     #c9a84c;   /* dourado — detalhes e ornamentos */
+    --cor-tinta:       #2c1810;   /* quase preto — texto principal */
+    --cor-tinta-suave: #6b5344;   /* marrom médio — texto secundário */
+    --cor-sucesso:     #4a7c59;   /* verde musgo — mensagem de sucesso */
+    --cor-erro:        #8b2635;   /* vermelho vinho — mensagem de erro */
+
+    /* Fontes */
+    --fonte-titulo: 'Playfair Display', Georgia, serif;
+    --fonte-corpo:  'Lora', 'Times New Roman', serif;
+
+    /* Sombras */
+    --sombra-container: 0 20px 60px rgba(44, 24, 16, 0.25),
+                        0 4px 15px rgba(44, 24, 16, 0.15);
+}
+
+
+/* ============================================================
+   2. RESET E BASE
+   Zeramos margens e padding padrão do navegador e definimos
+   box-sizing: border-box — isso faz padding e border serem
+   incluídos no tamanho total do elemento (mais intuitivo).
+   ============================================================ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--fonte-corpo);
+    color: var(--cor-tinta);
+    min-height: 100vh;
+}
+
+
+/* ============================================================
+   3. TEXTURA DE FUNDO (page-wrapper)
+
+   Usamos três camadas de background sobrepostas:
+   - Camada 1: linhas horizontais finíssimas (grão do papel)
+   - Camada 2: gradiente diagonal suave (profundidade)
+   - Cor base: bege papel
+
+   No CSS, múltiplos background-image são separados por vírgula,
+   e a primeira declarada fica na frente das outras.
+   ============================================================ */
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+
+    background-color: var(--cor-papel);
+    background-image:
+        /* Linhas horizontais sutis imitando fibras do papel */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 3px,
+            rgba(44, 24, 16, 0.012) 3px,
+            rgba(44, 24, 16, 0.012) 4px
+        ),
+        /* Gradiente diagonal para profundidade */
+        linear-gradient(
+            135deg,
+            #ede5d0 0%,
+            #f5f0e8 40%,
+            #ede8d5 100%
+        );
+}
+
+
+/* ============================================================
+   4. DECORAÇÕES DE FUNDO
+
+   Caracteres tipográficos ornamentais (❧) posicionados nas
+   laterais com position: absolute e opacity baixa.
+   Pointer-events: none garante que não atrapalhem os cliques.
+   ============================================================ */
+.bg-decoration {
+    position: absolute;
+    font-size: 180px;
+    color: var(--cor-dourado);
+    opacity: 0.07;
+    pointer-events: none;
+    font-family: var(--fonte-titulo);
+    line-height: 1;
+    user-select: none;
+}
+
+.bg-deco-left {
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-15deg);
+}
+
+.bg-deco-right {
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%) rotate(15deg) scaleX(-1);
+}
+
+
+/* ============================================================
+   5. CONTAINER CENTRAL (login-container)
+
+   position: relative + z-index: 1 garante que ele fique
+   acima das decorações de fundo (que têm z-index padrão).
+
+   A borda dupla com outline cria o efeito de moldura clássica.
+   ============================================================ */
+.login-container {
+    background-color: var(--cor-papel);
+    background-image: linear-gradient(
+        160deg,
+        rgba(255,255,255,0.6) 0%,
+        transparent 60%
+    );
+
+    border: 2px solid var(--cor-dourado);
+    /* Borda interna extra: outline com offset negativo simularia
+       moldura dupla, mas usamos box-shadow para mais controle */
+    box-shadow:
+        var(--sombra-container),
+        inset 0 0 0 4px var(--cor-papel),
+        inset 0 0 0 6px rgba(201, 168, 76, 0.3);
+
+    border-radius: 4px;
+    padding: 48px 52px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    z-index: 1;
+
+    /* Animação de entrada — definida na seção 12 */
+    animation: fadeInUp 0.6s ease both;
+}
+
+/* Cantos decorativos usando pseudo-elementos ::before e ::after
+   Pseudo-elementos são elementos virtuais criados com CSS,
+   sem precisar de HTML adicional. */
+.login-container::before,
+.login-container::after {
+    content: '✦';
+    position: absolute;
+    font-size: 14px;
+    color: var(--cor-dourado);
+    opacity: 0.7;
+}
+
+.login-container::before {
+    top: 10px;
+    left: 14px;
+}
+
+.login-container::after {
+    bottom: 10px;
+    right: 14px;
+}
+
+
+/* ============================================================
+   6. HEADER — Logo e título
+   ============================================================ */
+.login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.quill-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 8px;
+    /* Animação de balanço suave — keyframe definido na seção 12 */
+    animation: gentleRock 4s ease-in-out infinite;
+    transform-origin: bottom center;
+}
+
+.brand-title {
+    font-family: var(--fonte-titulo);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--cor-couro);
+    letter-spacing: 3px;
+    /* text-shadow cria um sutil efeito de profundidade */
+    text-shadow: 1px 2px 4px rgba(44, 24, 16, 0.15);
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    /* font-style: italic dá o toque literário */
+    font-style: italic;
+}
+
+
+/* ============================================================
+   7. DIVISOR DECORATIVO
+
+   Flex com align-items: center centraliza verticalmente o
+   ornamento (❦) entre as duas linhas.
+   ============================================================ */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.divider-line {
+    flex: 1;           /* ocupa todo espaço disponível */
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cor-dourado),
+        transparent
+    );
+}
+
+.divider-ornament {
+    font-size: 20px;
+    color: var(--cor-dourado);
+    line-height: 1;
+    /* Rotação de 90° deixa o ornamento ❦ mais elegante */
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+
+/* ============================================================
+   8. ABAS (tab-switcher)
+
+   As abas alternam entre os painéis via JavaScript.
+   A classe .active é adicionada/removida pelo JS.
+   ============================================================ */
+.tab-switcher {
+    display: flex;
+    border-bottom: 2px solid var(--cor-papel-escuro);
+    margin-bottom: 28px;
+    gap: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    /* Margin-bottom negativo: o border-bottom do botão
+       sobrepõe o border-bottom do container pai */
+    margin-bottom: -2px;
+    padding: 10px;
+    font-family: var(--fonte-titulo);
+    font-size: 16px;
+    color: var(--cor-tinta-suave);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.tab-btn:hover {
+    color: var(--cor-couro);
+}
+
+.tab-btn.active {
+    color: var(--cor-couro);
+    border-bottom-color: var(--cor-dourado);
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   9. FORMULÁRIOS E INPUTS
+   ============================================================ */
+
+/* Cada grupo label + input */
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* .input-wrapper envolve o ícone + o input com position: relative,
+   permitindo posicionar o ícone absolutamente dentro dele */
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;  /* não bloqueia cliques no input */
+    opacity: 0.5;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 13px 16px 13px 42px;  /* padding-left maior por causa do ícone */
+    background: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid var(--cor-papel-escuro);
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
+    color: var(--cor-tinta);
+    transition: all 0.3s ease;
+    /* appearance: none remove estilos padrão do navegador */
+    appearance: none;
+}
+
+/* Estado de foco — :focus é ativado quando o input está selecionado */
+.form-group input:focus {
+    outline: none;
+    border-color: var(--cor-dourado);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+/* Placeholder — texto de dica dentro do input */
+.form-group input::placeholder {
+    color: var(--cor-tinta-suave);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+
+/* ============================================================
+   10. BOTÃO DE SUBMIT
+   ============================================================ */
+.btn-submit {
+    width: 100%;
+    padding: 14px 24px;
+    margin-top: 8px;
+
+    /* Gradiente de marrom couro */
+    background: linear-gradient(
+        135deg,
+        var(--cor-couro) 0%,
+        var(--cor-couro-escuro) 100%
+    );
+    color: var(--cor-papel);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+
+    font-family: var(--fonte-titulo);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+
+    /* display: flex permite alinhar o texto e a seta */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Brilho animado que passa pelo botão ao fazer hover */
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.15),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.btn-submit:hover {
+    background: linear-gradient(
+        135deg,
+        var(--cor-couro-escuro) 0%,
+        #4a2008 100%
+    );
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+    letter-spacing: 3px;
+}
+
+.btn-submit:hover::before {
+    left: 100%;
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.btn-arrow {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.btn-submit:hover .btn-arrow {
+    transform: translateX(4px);
+}
+
+
+/* ============================================================
+   11. MENSAGEM DE FEEDBACK
+   ============================================================ */
+.message {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
+    display: none;          /* escondido por padrão, JS altera para 'block' */
+    animation: fadeInUp 0.3s ease;
+}
+
+.message.success {
+    background: rgba(74, 124, 89, 0.12);
+    border: 1px solid rgba(74, 124, 89, 0.4);
+    color: var(--cor-sucesso);
+}
+
+.message.error {
+    background: rgba(139, 38, 53, 0.1);
+    border: 1px solid rgba(139, 38, 53, 0.35);
+    color: var(--cor-erro);
+}
+
+.message.info {
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    color: var(--cor-couro);
+}
+
+
+/* ============================================================
+   12. PAINÉIS DE FORMULÁRIO
+   Apenas o painel .active é exibido.
+   ============================================================ */
+.form-panel {
+    display: none;
+}
+
+.form-panel.active {
+    display: block;
+    animation: fadeInUp 0.35s ease both;
+}
+
+
+/* ============================================================
+   13. ANIMAÇÕES (keyframes)
+
+   @keyframes define os estados de uma animação nomeada.
+   Depois ela é aplicada com a propriedade animation: nome duração.
+   ============================================================ */
+
+/* Entrada suave vindo de baixo */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Balanço suave da pena */
+@keyframes gentleRock {
+    0%, 100% { transform: rotate(-5deg); }
+    50%       { transform: rotate(5deg); }
+}
+
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
 .navbar {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 15px 0;
-    margin-bottom: 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--cor-couro);
+    border-bottom: 3px solid transparent;
+    /* border-image com gradiente cria borda inferior dourada
+       que vai do transparente ao dourado e volta */
+    border-image: linear-gradient(
+        90deg,
+        transparent,
+        var(--cor-dourado),
+        transparent
+    ) 1;
+    box-shadow: 0 2px 20px rgba(44, 24, 16, 0.4);
 }
 
 .nav-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 14px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.navbar h1 {
-    color: #667eea;
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-quill { font-size: 22px; }
+
+.nav-brand {
+    font-family: var(--fonte-titulo);
     font-size: 24px;
+    font-weight: 700;
+    color: var(--cor-papel);
+    letter-spacing: 2px;
 }
 
-/* Auth Box (Login/Register) */
-.auth-box {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    padding: 40px;
-    max-width: 450px;
-    margin: 50px auto;
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
-.auth-box h1 {
-    text-align: center;
-    color: #667eea;
-    font-size: 36px;
-    margin-bottom: 10px;
+.nav-user {
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
+    font-style: italic;
+    color: rgba(245, 240, 232, 0.7);
 }
 
-.subtitle {
-    text-align: center;
-    color: #666;
-    margin-bottom: 30px;
-    font-size: 14px;
-}
-
-/* Formulários */
-.form-container h2 {
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 24px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.3s;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
-.form-footer {
-    text-align: center;
-    margin-top: 20px;
-    color: #666;
-    font-size: 14px;
-}
-
-.form-footer a {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.form-footer a:hover {
-    text-decoration: underline;
-}
-
-/* Botões */
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
+.btn-logout {
+    background: transparent;
+    border: 1.5px solid rgba(201, 168, 76, 0.5);
+    color: var(--cor-dourado);
+    padding: 7px 16px;
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    width: 100%;
+.btn-logout:hover {
+    background: rgba(201, 168, 76, 0.15);
+    border-color: var(--cor-dourado);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+/* ============================================================
+   DASHBOARD WRAPPER
+   Sobrescreve o .page-wrapper do login removendo o flex
+   centralizado — o dashboard precisa crescer para cima
+   ============================================================ */
+.dashboard-wrapper {
+    display: block;
+    min-height: calc(100vh - 55px);
+    padding: 40px 32px;
 }
 
-.btn-secondary {
-    background: #f0f0f0;
-    color: #333;
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeInUp 0.5s ease both;
 }
 
-.btn-secondary:hover {
-    background: #e0e0e0;
-}
-
-.btn-danger {
-    background: #ff4757;
-    color: white;
-    padding: 8px 16px;
-    font-size: 12px;
-}
-
-.btn-danger:hover {
-    background: #ff3838;
-}
-
-.btn-edit {
-    background: #667eea;
-    color: white;
-    padding: 8px 16px;
-    font-size: 12px;
-}
-
-.btn-edit:hover {
-    background: #5568d3;
-}
-
-/* Dashboard */
-.dashboard {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-}
-
+/* ============================================================
+   HEADER DO DASHBOARD
+   ============================================================ */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
+    align-items: flex-end;
+    margin-bottom: 20px;
 }
 
-.dashboard-header h2 {
-    color: #333;
-    font-size: 28px;
+.dashboard-title {
+    font-family: var(--fonte-titulo);
+    font-size: 36px;
+    font-style: italic;
+    color: var(--cor-couro);
+    line-height: 1.1;
 }
 
-.dashboard-header .btn-primary {
-    width: auto;
+.book-count {
+    display: block;
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 1px;
+    margin-top: 4px;
 }
 
-/* Formulário de livro (overlay) */
-.book-form-container {
+.btn-adicionar {
+    background: var(--cor-couro);
+    color: var(--cor-papel);
+    border: none;
+    border-bottom: 3px solid var(--cor-couro-escuro);
+    padding: 12px 24px;
+    border-radius: 3px;
+    font-family: var(--fonte-titulo);
+    font-size: 15px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-adicionar:hover {
+    background: var(--cor-couro-escuro);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35);
+}
+
+/* ============================================================
+   GRID DE CARDS
+   auto-fill + minmax: cria colunas automaticamente.
+   Não precisa de media queries para reorganizar!
+   ============================================================ */
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+/* ============================================================
+   CARD DO LIVRO
+   display: flex com row coloca lombada à esquerda
+   ============================================================ */
+.book-card {
+    display: flex;
+    flex-direction: row;
+    background: #fdf8f0;
+    border: 1px solid var(--cor-papel-escuro);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 2px 4px 12px rgba(44, 24, 16, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Animação de "sair da estante" no hover */
+.book-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 4px 12px 28px rgba(44, 24, 16, 0.2);
+}
+
+/* ============================================================
+   LOMBADA DO LIVRO
+   :nth-child dá cores diferentes a cada card automaticamente
+   ============================================================ */
+.book-spine {
+    width: 14px;
+    flex-shrink: 0;
+}
+
+.book-card:nth-child(6n+1) .book-spine { background: #8b4513; }
+.book-card:nth-child(6n+2) .book-spine { background: #2c5f6e; }
+.book-card:nth-child(6n+3) .book-spine { background: #4a7c59; }
+.book-card:nth-child(6n+4) .book-spine { background: #7b3f6e; }
+.book-card:nth-child(6n+5) .book-spine { background: #c9a84c; }
+.book-card:nth-child(6n+6) .book-spine { background: #5c4a1e; }
+
+/* ============================================================
+   CONTEÚDO DO CARD
+   ============================================================ */
+.book-content {
+    flex: 1;
+    padding: 18px 20px 14px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* evita overflow do texto em grids */
+}
+
+.book-title {
+    font-family: var(--fonte-titulo);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--cor-tinta);
+    margin-bottom: 8px;
+    /* Limita a 2 linhas com reticências */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.book-meta {
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
+    color: var(--cor-tinta-suave);
+    margin-bottom: 4px;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-meta strong {
+    font-style: normal;
+    color: var(--cor-tinta);
+}
+
+.book-description {
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
+    color: var(--cor-tinta-suave);
+    margin-top: 8px;
+    line-height: 1.5;
+    /* Limita a 3 linhas */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1; /* empurra botões para baixo */
+}
+
+/* ============================================================
+   BOTÕES DE AÇÃO DO CARD
+   ============================================================ */
+.book-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--cor-papel-escuro);
+}
+
+.btn-editar,
+.btn-deletar {
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1.5px solid transparent;
+}
+
+.btn-editar {
+    background: transparent;
+    border-color: var(--cor-couro);
+    color: var(--cor-couro);
+}
+
+.btn-editar:hover {
+    background: var(--cor-couro);
+    color: var(--cor-papel);
+}
+
+.btn-deletar {
+    background: transparent;
+    border-color: var(--cor-erro);
+    color: var(--cor-erro);
+}
+
+.btn-deletar:hover {
+    background: var(--cor-erro);
+    color: var(--cor-papel);
+}
+
+/* ============================================================
+   ESTADOS: LOADING E VAZIO
+   ============================================================ */
+.loading-state {
+    grid-column: 1 / -1; /* ocupa todas as colunas do grid */
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--cor-tinta-suave);
+    font-family: var(--fonte-corpo);
+    font-style: italic;
+}
+
+.loading-quill {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+    animation: gentleRock 2s ease-in-out infinite;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.empty-title {
+    font-family: var(--fonte-titulo);
+    font-size: 24px;
+    font-style: italic;
+    color: var(--cor-couro);
+    margin-bottom: 8px;
+}
+
+.empty-subtitle {
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    color: var(--cor-tinta-suave);
+}
+
+/* ============================================================
+   MODAL OVERLAY
+   position: fixed cobre a tela inteira independente do scroll.
+   display: none por padrão — JS adiciona .aberto para mostrar.
+   ============================================================ */
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
+    background: rgba(44, 24, 16, 0.65);
+    display: none;
     align-items: center;
-    z-index: 1000;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+    backdrop-filter: blur(2px);
 }
 
-.book-form {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
+.modal-overlay.aberto {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+}
+
+/* ============================================================
+   MODAL BOX
+   ============================================================ */
+.modal-box {
+    background: var(--cor-papel);
+    border: 2px solid var(--cor-dourado);
+    box-shadow:
+        0 25px 60px rgba(44, 24, 16, 0.4),
+        inset 0 0 0 4px var(--cor-papel),
+        inset 0 0 0 6px rgba(201, 168, 76, 0.2);
+    border-radius: 4px;
+    width: 100%;
     max-width: 500px;
-    width: 90%;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: fadeInUp 0.3s ease both;
 }
 
-.form-header {
+.modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--cor-papel-escuro);
 }
 
-.form-header h3 {
-    color: #333;
+.modal-titulo {
+    font-family: var(--fonte-titulo);
     font-size: 22px;
+    font-style: italic;
+    color: var(--cor-couro);
 }
 
-.btn-close {
+.btn-fechar {
     background: none;
     border: none;
-    font-size: 24px;
-    color: #999;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-}
-
-.btn-close:hover {
-    color: #333;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 25px;
-}
-
-.form-actions .btn {
-    flex: 1;
-}
-
-/* Cards de livros */
-.books-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.book-card {
-    background: #f9f9f9;
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s;
-    border: 2px solid transparent;
-}
-
-.book-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
-}
-
-.book-card h3 {
-    color: #333;
     font-size: 18px;
-    margin-bottom: 10px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.book-info {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.book-info strong {
-    color: #333;
-}
-
-.book-actions {
+    color: var(--cor-tinta-suave);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #e0e0e0;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
-.book-actions .btn {
+.btn-fechar:hover {
+    background: rgba(139, 69, 19, 0.1);
+    color: var(--cor-couro);
+}
+
+.modal-body {
+    padding: 24px 28px;
+}
+
+/* textarea do modal */
+.campo-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid var(--cor-papel-escuro);
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
+    color: var(--cor-tinta);
+    resize: vertical;
+    transition: all 0.3s ease;
+    line-height: 1.5;
+}
+
+.campo-textarea:focus {
+    outline: none;
+    border-color: var(--cor-dourado);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+.campo-textarea::placeholder {
+    color: var(--cor-tinta-suave);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px 28px 24px;
+    border-top: 1px solid var(--cor-papel-escuro);
+}
+
+.btn-cancelar {
     flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: 1.5px solid var(--cor-papel-escuro);
+    border-radius: 3px;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    color: var(--cor-tinta-suave);
+    cursor: pointer;
+    transition: all 0.25s ease;
 }
 
-/* Estados vazios e loading */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #999;
+.btn-cancelar:hover {
+    border-color: var(--cor-couro);
+    color: var(--cor-couro);
 }
 
-.empty-state p {
-    font-size: 24px;
-    margin-bottom: 10px;
+.btn-salvar {
+    flex: 2;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--cor-couro), var(--cor-couro-escuro));
+    color: var(--cor-papel);
+    border: none;
+    border-radius: 3px;
+    font-family: var(--fonte-titulo);
+    font-size: 15px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
 
-.empty-subtitle {
-    font-size: 16px !important;
-    color: #bbb !important;
+.btn-salvar:hover {
+    background: linear-gradient(135deg, var(--cor-couro-escuro), #4a2008);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35);
 }
 
-.loading {
-    text-align: center;
-    padding: 40px;
-    color: #999;
-    font-size: 16px;
+.btn-salvar:hover .btn-arrow {
+    transform: translateX(4px);
 }
 
-/* Mensagens */
-.message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    z-index: 2000;
-    display: none;
-    animation: slideIn 0.3s ease;
+/* ============================================================
+   ANIMAÇÃO DO OVERLAY
+   ============================================================ */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
+/* ============================================================
+   14. RESPONSIVIDADE
+
+   @media (max-width: Xpx) aplica estilos apenas quando a tela
+   for menor que X pixels — essencial para mobile.
+   ============================================================ */
+@media (max-width: 520px) {
+    .login-container {
+        padding: 36px 28px;
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
+
+    .brand-title {
+        font-size: 34px;
+    }
+
+    .bg-decoration {
+        font-size: 100px;
+        opacity: 0.04;
     }
 }
 
-.message.success {
-    background: #4caf50;
-    color: white;
-}
-
-.message.error {
-    background: #ff4757;
-    color: white;
-}
-
-.message.info {
-    background: #2196f3;
-    color: white;
-}
-
-/* Responsividade */
 @media (max-width: 768px) {
+    .dashboard-wrapper {
+        padding: 24px 16px;
+    }
+
     .dashboard-header {
         flex-direction: column;
-        gap: 15px;
         align-items: flex-start;
+        gap: 16px;
     }
-    
-    .dashboard-header .btn-primary {
+
+    .btn-adicionar {
         width: 100%;
+        text-align: center;
     }
-    
-    .books-container {
+
+    .books-grid {
         grid-template-columns: 1fr;
     }
-    
-    .auth-box {
-        margin: 20px;
-        padding: 30px 20px;
+
+    .nav-container {
+        padding: 12px 16px;
+    }
+
+    .nav-user {
+        display: none;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* ============================================================
+   NAVBAR — BUSCA CENTRALIZADA
+   ============================================================ */
+.nav-container {
+    display: grid;
+    /* Três colunas: logo | busca | usuário
+       1fr garante que a busca ocupe o espaço central disponível */
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+}
+
+.nav-center {
+    /* Limita a largura máxima da barra de busca */
+    max-width: 480px;
+    width: 100%;
+    justify-self: center;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 9px 36px 9px 36px;
+    background: rgba(245, 240, 232, 0.15);
+    border: 1.5px solid rgba(201, 168, 76, 0.3);
+    border-radius: 20px; /* borda arredondada — estilo moderno */
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    color: var(--cor-papel);
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(245, 240, 232, 0.45);
+    font-style: italic;
+}
+
+.search-input:focus {
+    outline: none;
+    background: rgba(245, 240, 232, 0.22);
+    border-color: var(--cor-dourado);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+.btn-limpar-busca {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: rgba(245, 240, 232, 0.6);
+    font-size: 12px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.btn-limpar-busca:hover {
+    background: rgba(245, 240, 232, 0.15);
+    color: var(--cor-papel);
+}
+
+/* ============================================================
+   CARDS DE ESTATÍSTICAS
+
+   display: grid com 3 colunas iguais.
+   Cada stat-card tem um sutil brilho no hover.
+   ============================================================ */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--cor-papel-escuro);
+    border-radius: 8px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    /* Animação de entrada — staggered via animation-delay no JS */
+    animation: fadeInUp 0.5s ease both;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0ms; }
+.stat-card:nth-child(2) { animation-delay: 80ms; }
+.stat-card:nth-child(3) { animation-delay: 160ms; }
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(44, 24, 16, 0.12);
+    border-color: var(--cor-dourado);
+}
+
+.stat-icon {
+    font-size: 28px;
+    line-height: 1;
+    /* Leve rotação no hover via o pai */
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.15);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-family: var(--fonte-titulo);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--cor-couro);
+    line-height: 1;
+}
+
+.stat-label {
+    font-family: var(--fonte-corpo);
+    font-size: 12px;
+    color: var(--cor-tinta-suave);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   ANIMAÇÃO ESCALONADA DOS CARDS
+
+   Os cards recebem animation-delay via JS (index * 80ms).
+   A animação cardEntrada combina fadeIn + slideUp + scale
+   para um efeito mais elaborado que o simples fadeInUp.
+   ============================================================ */
+.book-card {
+    animation: cardEntrada 0.45s ease both;
+}
+
+@keyframes cardEntrada {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   HOVER ELABORADO DO CARD
+   A lombada se expande levemente no hover
+   ============================================================ */
+.book-card:hover .book-spine {
+    width: 20px; /* expande de 14px para 20px */
+    transition: width 0.3s ease;
+}
+
+.book-spine {
+    transition: width 0.3s ease;
+}
+
+/* ============================================================
+   ESTADO SEM RESULTADOS DE BUSCA
+   ============================================================ */
+.sem-resultados {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+/* ============================================================
+   RESPONSIVIDADE ADICIONAL
+   ============================================================ */
+@media (max-width: 900px) {
+    .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .stat-number { font-size: 22px; }
+}
+
+@media (max-width: 640px) {
+    /* Navbar vira duas linhas em mobile */
+    .nav-container {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 12px;
+    }
+
+    .nav-center {
+        grid-column: 1 / -1; /* ocupa as duas colunas */
+        max-width: 100%;
+        order: 3;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
     }
 }

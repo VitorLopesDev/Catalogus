@@ -2,7 +2,11 @@ package io.thalita.vitor.catalogus.controller;
 
 import io.thalita.vitor.catalogus.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @CrossOrigin("*")
 @RestController
@@ -13,18 +17,25 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         boolean success = authService.login(request.getEmail(), request.getPassword());
-        return success ? "Login realizado com sucesso!" : "Credenciais inválidas.";
+        if(success != true){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("menssage", "Credenciais inválidas."));
+        }
+        return ResponseEntity.ok(Map.of("menssage", "Login realizado com sucesso.",
+                "email", request.getEmail()));
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
             authService.register(request.getEmail(), request.getPassword());
-            return "Usuário registrado com sucesso!";
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("mensagem", "Usuário registrado com sucesso."));
         } catch (Exception e) {
-            return e.getMessage();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("menssagem", e.getMessage()));
         }
     }
 }

@@ -1,207 +1,388 @@
-// Configuração da API
+// ============================================================
+// dashboard.js — versão modernizada
+//
+// Novidades em relação à versão anterior:
+// - Lista de livros guardada em memória (livrosCached)
+// - Busca em tempo real filtrando localmente
+// - Estatísticas calculadas a partir dos dados em memória
+// - Animação de entrada escalonada nos cards
+// ============================================================
+
 const API_URL = 'http://localhost:8080';
 
-// Verificar se o usuário está logado
-function checkAuth() {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
+// ============================================================
+// CACHE LOCAL
+//
+// Guardamos a lista completa aqui após carregar do backend.
+// A busca filtra esse array em vez de chamar o backend a
+// cada letra digitada — mais rápido e sem sobrecarregar o servidor.
+// ============================================================
+let livrosCached = [];
+let tituloEditando = null;
+
+// ============================================================
+// 1. AUTENTICAÇÃO E NAVBAR
+// ============================================================
+function carregarUsuario() {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
         window.location.href = 'index.html';
+        return;
     }
+    document.getElementById('navUserEmail').textContent = email;
 }
 
-// Executar verificação ao carregar a página
-checkAuth();
-
-// Função para logout
 function logout() {
     localStorage.removeItem('userEmail');
     window.location.href = 'index.html';
 }
 
-// Função para mostrar mensagens
-function showMessage(text, type = 'info') {
-    const messageDiv = document.getElementById('message');
-    messageDiv.textContent = text;
-    messageDiv.className = `message ${type}`;
-    messageDiv.style.display = 'block';
-    
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 4000);
-}
-
-// Mostrar/ocultar formulário de livro
-function showAddBookForm() {
-    document.getElementById('formTitle').textContent = 'Adicionar Novo Livro';
-    document.getElementById('bookForm').reset();
-    document.getElementById('bookId').value = '';
-    document.getElementById('bookFormContainer').style.display = 'flex';
-}
-
-function hideBookForm() {
-    document.getElementById('bookFormContainer').style.display = 'none';
-}
-
-// Carregar lista de livros
-async function loadBooks() {
-    const container = document.getElementById('booksContainer');
+// ============================================================
+// 2. CARREGAR LIVROS DO BACKEND
+// ============================================================
+async function carregarLivros() {
+    const grid       = document.getElementById('booksGrid');
     const emptyState = document.getElementById('emptyState');
-    
+
+    grid.innerHTML = `
+        <div class="loading-state">
+            <span class="loading-quill">✒</span>
+            <p>Consultando o acervo...</p>
+        </div>`;
+    emptyState.style.display = 'none';
+
     try {
         const response = await fetch(`${API_URL}/book/list`);
-        
+
         if (response.status === 204) {
-            // Sem conteúdo - lista vazia
-            container.innerHTML = '';
+            livrosCached = [];
+            grid.innerHTML = '';
             emptyState.style.display = 'block';
+            atualizarEstatisticas([]);
+            atualizarContador(0, 0);
             return;
         }
-        
-        const books = await response.json();
-        
-        if (books.length === 0) {
-            container.innerHTML = '';
+
+        const livros = await response.json();
+        // Salva no cache para a busca usar
+        livrosCached = livros;
+
+        atualizarEstatisticas(livros);
+
+        if (livros.length === 0) {
+            grid.innerHTML = '';
             emptyState.style.display = 'block';
+            atualizarContador(0, 0);
             return;
         }
-        
-        emptyState.style.display = 'none';
-        container.innerHTML = '';
-        
-        books.forEach(book => {
-            const bookCard = createBookCard(book);
-            container.appendChild(bookCard);
-        });
-        
+
+        renderizarCards(livros);
+
     } catch (error) {
         console.error('Erro ao carregar livros:', error);
-        container.innerHTML = '<div class="loading">Erro ao carregar livros. Verifique se o backend está rodando.</div>';
+        grid.innerHTML = `
+            <div class="loading-state">
+                <p>Erro ao carregar o acervo. Verifique o servidor.</p>
+            </div>`;
     }
 }
 
-// Criar card de livro
-function createBookCard(book) {
+// ============================================================
+// 3. RENDERIZAR CARDS
+//
+// Recebe um array de livros (pode ser a lista completa ou
+// o resultado filtrado) e injeta no grid com animação escalonada.
+//
+// ANIMAÇÃO ESCALONADA:
+// Cada card recebe um animation-delay diferente calculado
+// pelo índice: index * 80ms. Isso cria o efeito de cascata
+// onde os cards aparecem um após o outro.
+// ============================================================
+function renderizarCards(livros) {
+    const grid       = document.getElementById('booksGrid');
+    const emptyState = document.getElementById('emptyState');
+    const semResult  = document.getElementById('semResultados');
+
+    grid.innerHTML = '';
+    emptyState.style.display = 'none';
+    semResult.style.display  = 'none';
+
+    livros.forEach((livro, index) => {
+        const card = criarCard(livro, index);
+        grid.appendChild(card);
+    });
+}
+
+// ============================================================
+// 4. CRIAR CARD com animação escalonada
+// ============================================================
+function criarCard(livro, index = 0) {
     const card = document.createElement('div');
     card.className = 'book-card';
-    
+
+    // animation-delay escalonado: cada card espera um pouco mais
+    // que o anterior para criar o efeito de cascata
+    card.style.animationDelay = `${index * 80}ms`;
+
     card.innerHTML = `
-        <h3>${book.title}</h3>
-        <p class="book-info"><strong>Autor:</strong> ${book.author}</p>
-        <p class="book-info"><strong>ISBN:</strong> ${book.isbn || 'Não informado'}</p>
-        <div class="book-actions">
-            <button onclick="editBook(${book.id}, '${book.title}', '${book.author}', '${book.isbn || ''}')" class="btn btn-edit">
-                ✏️ Editar
-            </button>
-            <button onclick="deleteBook('${book.title}')" class="btn btn-danger">
-                🗑️ Deletar
-            </button>
-        </div>
-    `;
-    
+        <div class="book-spine"></div>
+        <div class="book-content">
+            <h3 class="book-title"></h3>
+            <p class="book-meta"><strong>Autor: </strong><span class="js-autor"></span></p>
+            <p class="book-meta"><strong>ISBN: </strong><span class="js-isbn"></span></p>
+            <p class="book-description"></p>
+            <div class="book-actions">
+                <button class="btn-editar">✏ Editar</button>
+                <button class="btn-deletar">✕ Remover</button>
+            </div>
+        </div>`;
+
+    // textContent é seguro contra XSS
+    card.querySelector('.book-title').textContent       = livro.title;
+    card.querySelector('.js-autor').textContent         = livro.author;
+    card.querySelector('.js-isbn').textContent          = livro.isbn || 'Não informado';
+    card.querySelector('.book-description').textContent = livro.description || '';
+
+    card.querySelector('.btn-editar').addEventListener('click', () => abrirModalEdicao(livro));
+    card.querySelector('.btn-deletar').addEventListener('click', () => deletarLivro(livro.title));
+
     return card;
 }
 
-// Adicionar ou atualizar livro
-document.getElementById('bookForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const id = document.getElementById('bookId').value;
-    const title = document.getElementById('bookTitle').value;
-    const author = document.getElementById('bookAuthor').value;
-    const isbn = document.getElementById('bookIsbn').value;
-    
-    const bookData = {
-        title: title,
-        author: author,
-        isbn: isbn
-    };
-    
-    try {
-        if (id) {
-            // Atualizar livro existente
-            const response = await fetch(`${API_URL}/book/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(bookData)
-            });
-            
-            if (response.ok) {
-                showMessage('Livro atualizado com sucesso!', 'success');
-                hideBookForm();
-                loadBooks();
-            } else {
-                const errorText = await response.text();
-                showMessage(errorText || 'Erro ao atualizar livro', 'error');
-            }
-        } else {
-            // Adicionar novo livro
-            const response = await fetch(`${API_URL}/book`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(bookData)
-            });
-            
-            if (response.status === 201) {
-                showMessage('Livro adicionado com sucesso!', 'success');
-                hideBookForm();
-                loadBooks();
-            } else {
-                const errorText = await response.text();
-                showMessage(errorText || 'Erro ao adicionar livro', 'error');
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao salvar livro:', error);
-        showMessage('Erro ao conectar com o servidor', 'error');
-    }
-});
+// ============================================================
+// 5. ESTATÍSTICAS
+//
+// Calculamos tudo a partir do array em memória (livrosCached),
+// sem precisar de endpoints extras no backend.
+//
+// Set() cria uma coleção de valores únicos — usamos para
+// contar autores distintos sem repetição.
+// ============================================================
+function atualizarEstatisticas(livros) {
+    const total = livros.length;
 
-// Editar livro
-function editBook(id, title, author, isbn) {
-    document.getElementById('formTitle').textContent = 'Editar Livro';
-    document.getElementById('bookId').value = id;
-    document.getElementById('bookTitle').value = title;
-    document.getElementById('bookAuthor').value = author;
-    document.getElementById('bookIsbn').value = isbn;
-    document.getElementById('bookFormContainer').style.display = 'flex';
+    // new Set() elimina duplicatas automaticamente
+    // .size retorna quantos itens únicos existem
+    const autoresUnicos = new Set(livros.map(l => l.author.trim())).size;
+
+    const comIsbn = livros.filter(l => l.isbn && l.isbn.trim() !== '').length;
+
+    // Animação de contagem numérica (count-up)
+    animarNumero('statTotal',   total);
+    animarNumero('statAutores', autoresUnicos);
+    animarNumero('statIsbn',    comIsbn);
 }
 
-// Deletar livro
-async function deleteBook(title) {
-    if (!confirm(`Tem certeza que deseja deletar o livro "${title}"?`)) {
+// Anima o número de 0 até o valor final em 600ms
+function animarNumero(elementId, valorFinal) {
+    const el       = document.getElementById(elementId);
+    const duracao  = 600;   // duração total em ms
+    const intervalo = 16;   // ~60fps
+    const passos   = duracao / intervalo;
+    const incremento = valorFinal / passos;
+
+    let atual = 0;
+    const timer = setInterval(() => {
+        atual += incremento;
+        if (atual >= valorFinal) {
+            atual = valorFinal;
+            clearInterval(timer);
+        }
+        el.textContent = Math.floor(atual);
+    }, intervalo);
+}
+
+// ============================================================
+// 6. BUSCA EM TEMPO REAL
+//
+// Filtramos o livrosCached localmente, sem chamar o backend.
+// toLowerCase() garante busca case-insensitive (maiúsculas
+// e minúsculas tratadas igualmente).
+// includes() verifica se a string contém o termo buscado.
+// ============================================================
+function filtrarLivros(termo) {
+    const grid      = document.getElementById('booksGrid');
+    const semResult = document.getElementById('semResultados');
+    const btnLimpar = document.getElementById('btnLimparBusca');
+
+    // Mostra/esconde botão de limpar dependendo se há texto
+    btnLimpar.style.display = termo.length > 0 ? 'flex' : 'none';
+
+    const termoNorm = termo.toLowerCase().trim();
+
+    // Se não há termo, mostra tudo
+    if (!termoNorm) {
+        semResult.style.display = 'none';
+        renderizarCards(livrosCached);
+        atualizarContador(livrosCached.length, livrosCached.length);
         return;
     }
-    
-    try {
-        const response = await fetch(`${API_URL}/book/${encodeURIComponent(title)}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            showMessage('Livro deletado com sucesso!', 'success');
-            loadBooks();
-        } else {
-            const errorText = await response.text();
-            showMessage(errorText || 'Erro ao deletar livro', 'error');
-        }
-    } catch (error) {
-        console.error('Erro ao deletar livro:', error);
-        showMessage('Erro ao conectar com o servidor', 'error');
+
+    // Filtra por título OU autor
+    const resultado = livrosCached.filter(livro =>
+        livro.title.toLowerCase().includes(termoNorm) ||
+        livro.author.toLowerCase().includes(termoNorm)
+    );
+
+    if (resultado.length === 0) {
+        grid.innerHTML   = '';
+        semResult.style.display = 'block';
+        atualizarContador(0, livrosCached.length);
+        return;
+    }
+
+    semResult.style.display = 'none';
+    renderizarCards(resultado);
+    atualizarContador(resultado.length, livrosCached.length);
+}
+
+function limparBusca() {
+    const campo = document.getElementById('campoBusca');
+    campo.value = '';
+    campo.focus();
+    filtrarLivros('');
+}
+
+// ============================================================
+// 7. CONTADOR
+// Mostra "X obras" ou "X de Y obras" quando há filtro ativo
+// ============================================================
+function atualizarContador(visiveis, total) {
+    const el = document.getElementById('bookCount');
+    if (visiveis === total) {
+        el.textContent = total === 1 ? '1 obra' : `${total} obras`;
+    } else {
+        el.textContent = `${visiveis} de ${total} obras`;
     }
 }
 
-// Fechar formulário ao clicar fora dele
-document.getElementById('bookFormContainer').addEventListener('click', (e) => {
-    if (e.target.id === 'bookFormContainer') {
-        hideBookForm();
-    }
-});
+// ============================================================
+// 8. MODAL
+// ============================================================
+function abrirModal() {
+    tituloEditando = null;
+    document.getElementById('modalTitulo').textContent    = 'Nova Obra';
+    document.getElementById('btnSalvarTexto').textContent = 'Registrar Obra';
+    document.getElementById('livroForm').reset();
+    document.getElementById('modalOverlay').classList.add('aberto');
+}
 
-// Carregar livros ao iniciar
+function abrirModalEdicao(livro) {
+    tituloEditando = livro.title;
+    document.getElementById('modalTitulo').textContent    = 'Editar Obra';
+    document.getElementById('btnSalvarTexto').textContent = 'Salvar Alterações';
+    document.getElementById('campoTitulo').value    = livro.title;
+    document.getElementById('campoAutor').value     = livro.author;
+    document.getElementById('campoIsbn').value      = livro.isbn || '';
+    document.getElementById('campoDescricao').value = livro.description || '';
+    document.getElementById('modalOverlay').classList.add('aberto');
+}
+
+function fecharModal() {
+    document.getElementById('modalOverlay').classList.remove('aberto');
+    tituloEditando = null;
+}
+
+function fecharModalFora(event) {
+    if (event.target.id === 'modalOverlay') fecharModal();
+}
+
+// ============================================================
+// 9. SALVAR LIVRO
+// ============================================================
+async function salvarLivro() {
+    const titulo    = document.getElementById('campoTitulo').value.trim();
+    const autor     = document.getElementById('campoAutor').value.trim();
+    const isbn      = document.getElementById('campoIsbn').value.trim();
+    const descricao = document.getElementById('campoDescricao').value.trim();
+
+    if (!titulo || !autor) {
+        mostrarMensagem('Título e autor são obrigatórios.', 'error');
+        return;
+    }
+
+    const payload = { title: titulo, author: autor, isbn, description: descricao };
+
+    try {
+        let response;
+
+        if (tituloEditando) {
+            response = await fetch(
+                `${API_URL}/book/${encodeURIComponent(tituloEditando)}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }
+            );
+        } else {
+            response = await fetch(`${API_URL}/book`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        if (response.ok) {
+            mostrarMensagem(
+                tituloEditando ? 'Obra atualizada!' : 'Obra adicionada ao acervo!',
+                'success'
+            );
+            fecharModal();
+            // Limpa a busca e recarrega tudo do backend
+            limparBusca();
+            await carregarLivros();
+        } else {
+            const data = await response.json().catch(() => ({}));
+            mostrarMensagem(data.message || 'Erro ao salvar.', 'error');
+        }
+
+    } catch (error) {
+        console.error('Erro ao salvar livro:', error);
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
+    }
+}
+
+// ============================================================
+// 10. DELETAR LIVRO
+// ============================================================
+async function deletarLivro(titulo) {
+    if (!confirm(`Deseja remover "${titulo}" do acervo?`)) return;
+
+    try {
+        const response = await fetch(
+            `${API_URL}/book/${encodeURIComponent(titulo)}`,
+            { method: 'DELETE' }
+        );
+
+        if (response.ok) {
+            mostrarMensagem('Obra removida do acervo.', 'success');
+            await carregarLivros();
+        } else {
+            mostrarMensagem('Erro ao remover a obra.', 'error');
+        }
+
+    } catch (error) {
+        console.error('Erro ao deletar:', error);
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
+    }
+}
+
+// ============================================================
+// 11. MENSAGEM DE FEEDBACK
+// ============================================================
+function mostrarMensagem(texto, tipo = 'info') {
+    const el = document.getElementById('message');
+    el.textContent = texto;
+    el.className = `message ${tipo}`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
 window.addEventListener('load', () => {
-    loadBooks();
+    carregarUsuario();
+    carregarLivros();
 });

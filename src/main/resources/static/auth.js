@@ -1,122 +1,161 @@
-// Configuração da API
+// ============================================================
+// auth.js — Lógica de autenticação
+//
+// Responsabilidades deste arquivo:
+// 1. Alternar entre os painéis de Login e Cadastro
+// 2. Enviar o formulário de login para o backend
+// 3. Enviar o formulário de cadastro para o backend
+// 4. Redirecionar para o dashboard após login bem-sucedido
+// ============================================================
+
 const API_URL = 'http://localhost:8080';
 
-// Função para mostrar mensagens
-function showMessage(text, type = 'info') {
-    const messageDiv = document.getElementById('message');
-    messageDiv.textContent = text;
-    messageDiv.className = `message ${type}`;
-    messageDiv.style.display = 'block';
-    
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 4000);
+// ============================================================
+// ALTERNÂNCIA DE PAINÉIS (abas)
+//
+// Cada aba chama showTab() passando qual painel mostrar.
+// A função esconde todos os painéis e mostra apenas o escolhido.
+// ============================================================
+function showTab(tabName, btnClicado) {
+    // Remove .active de todos os painéis e botões
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    // Ativa o painel e o botão corretos
+    document.getElementById(tabName + 'Panel').classList.add('active');
+    btnClicado.classList.add('active');
+
+    // Limpa qualquer mensagem anterior ao trocar de aba
+    esconderMensagem();
 }
 
-// Alternar entre formulários
-function showRegisterForm(e) {
-    e.preventDefault();
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
+// ============================================================
+// MENSAGENS DE FEEDBACK
+// ============================================================
+function mostrarMensagem(texto, tipo = 'info') {
+    const el = document.getElementById('message');
+    el.textContent = texto;
+    // Define a classe para colorir corretamente (success / error / info)
+    el.className = `message ${tipo}`;
+    el.style.display = 'block';
+
+    // Some automaticamente após 4 segundos
+    setTimeout(esconderMensagem, 4000);
 }
 
-function showLoginForm(e) {
-    e.preventDefault();
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
+function esconderMensagem() {
+    const el = document.getElementById('message');
+    el.style.display = 'none';
+    el.className = 'message';
 }
 
-// Manipular Login
+// ============================================================
+// SUBMIT — LOGIN
+//
+// Correção Bug 1: antes usava response.text() e verificava
+// se continha a string 'sucesso'. Agora usamos response.json()
+// e verificamos o status HTTP com response.ok (true se 200-299).
+// ============================================================
 document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
+    e.preventDefault(); // impede o reload padrão do formulário
+
+    const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    
+
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        
-        const data = await response.text();
-        
-        if (data.includes('sucesso')) {
-            // Salvar email no localStorage para identificar usuário logado
-            localStorage.setItem('userEmail', email);
-            showMessage('Login realizado com sucesso!', 'success');
-            
-            // Redirecionar para o dashboard
+
+        // response.json() lê o corpo da resposta como JSON
+        const data = await response.json();
+
+        if (response.ok) {
+            // Correção Bug 2: guardamos o email que veio do backend,
+            // não o que o usuário digitou (mais seguro e consistente)
+            localStorage.setItem('userEmail', data.email);
+            mostrarMensagem('Acervo aberto com sucesso!', 'success');
+
+            // Aguarda 1s para o usuário ler a mensagem antes de redirecionar
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 1000);
         } else {
-            showMessage('Email ou senha incorretos!', 'error');
+            // response.ok é false para status 400, 401, 409, 500, etc.
+            mostrarMensagem(data.message || 'Credenciais inválidas.', 'error');
         }
+
     } catch (error) {
+        // O catch captura erros de rede (backend fora do ar, CORS, etc.)
         console.error('Erro ao fazer login:', error);
-        showMessage('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'error');
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 });
 
-// Manipular Registro
+// ============================================================
+// SUBMIT — CADASTRO
+//
+// Validações feitas no frontend antes de chamar o backend:
+// - Senhas coincidem?
+// - Senha tem ao menos 6 caracteres?
+// Isso evita chamadas desnecessárias ao servidor.
+// ============================================================
 document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
+
+    const email           = document.getElementById('registerEmail').value.trim();
+    const password        = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerPasswordConfirm').value;
-    
-    // Validar se as senhas coincidem
+
+    // Validação local — antes de chamar o backend
     if (password !== confirmPassword) {
-        showMessage('As senhas não coincidem!', 'error');
+        mostrarMensagem('As senhas não coincidem.', 'error');
         return;
     }
-    
-    // Validar tamanho mínimo da senha
+
     if (password.length < 6) {
-        showMessage('A senha deve ter pelo menos 6 caracteres!', 'error');
+        mostrarMensagem('A senha deve ter ao menos 6 caracteres.', 'error');
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        
-        const data = await response.text();
-        
-        if (data.includes('sucesso')) {
-            showMessage('Cadastro realizado com sucesso! Faça login.', 'success');
-            
-            // Limpar formulário
+
+        const data = await response.json();
+
+        if (response.ok) {
+            mostrarMensagem('Conta criada! Faça login para continuar.', 'success');
             document.getElementById('registerFormElement').reset();
-            
-            // Voltar para o formulário de login
+
+            // Volta para a aba de login após 2 segundos
             setTimeout(() => {
-                showLoginForm(new Event('click'));
+                showTab('login', document.querySelector('.tab-btn'));
             }, 2000);
         } else {
-            showMessage(data, 'error');
+            // 409 Conflict = usuário já existe (tratado pelo backend)
+            mostrarMensagem(data.message || 'Erro ao criar conta.', 'error');
         }
+
     } catch (error) {
-        console.error('Erro ao fazer registro:', error);
-        showMessage('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'error');
+        console.error('Erro ao registrar:', error);
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 });
 
-// Verificar se já está logado ao carregar a página
+// ============================================================
+// VERIFICAÇÃO DE SESSÃO
+//
+// Se o usuário já está logado (tem email no localStorage),
+// redireciona direto para o dashboard sem mostrar o login.
+// ============================================================
 window.addEventListener('load', () => {
-    const userEmail = localStorage.getItem('userEmail');
-    if (userEmail) {
-        // Se já está logado, redirecionar para o dashboard
+    if (localStorage.getItem('userEmail')) {
         window.location.href = 'dashboard.html';
     }
 });
