@@ -23,12 +23,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas da API
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/book/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
 
-                        // Arquivos do Frontend
                         .requestMatchers("/", "/index-figma.html", "/dashboard-figma.html").permitAll()
                         .requestMatchers("/index.html**", "/dashboard.html**").permitAll()
                         .requestMatchers("/*.css", "/*.js").permitAll()
@@ -36,7 +34,6 @@ public class SecurityConfig {
                         .requestMatchers("/images/**", "/fonts/**", "/assets/**").permitAll()
                         .requestMatchers("/*.png", "/*.jpg", "/*.svg", "/*.ico").permitAll()
 
-                        // Outras rotas precisam autenticação
                         .anyRequest().permitAll()
                 )
                 .httpBasic(basic -> {});

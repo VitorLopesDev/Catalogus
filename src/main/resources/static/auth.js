@@ -32,6 +32,12 @@ document.getElementById('loginFormElement').addEventListener('submit', async (e)
 
     const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+    const regex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+    if (!regex.test(email)) {
+                mostrarMensagem('E-mail inválido. Use o formato: nome@dominio.com', 'error');
+                return;
+    }
 
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
@@ -62,9 +68,16 @@ document.getElementById('loginFormElement').addEventListener('submit', async (e)
 document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+
     const email           = document.getElementById('registerEmail').value.trim();
     const password        = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerPasswordConfirm').value;
+    const regex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+    if (!regex.test(email)) {
+            mostrarMensagem('E-mail inválido. Use o formato: nome@dominio.com', 'error');
+            return;
+    }
 
     if (password !== confirmPassword) {
         mostrarMensagem('As senhas não coincidem.', 'error');
