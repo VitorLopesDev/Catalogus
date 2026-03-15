@@ -11,6 +11,7 @@ public class BookRequestDTO {
     private String isbn;
     private String description;
     private Double rating;
+    private Integer currentPage;
 
     public Long getId(){
         return id;
@@ -36,6 +37,7 @@ public class BookRequestDTO {
     public Double getRating(){
         return rating;
     }
+    public Integer getCurrentPage(){ return currentPage;}
 
     public void setOwnerEmail(String ownerEmail) {
         this.ownerEmail = ownerEmail;
@@ -58,4 +60,5 @@ public class BookRequestDTO {
     public void setRating(Double rating){
         this.rating = rating;
     }
+    public void setCurrentPage(Integer currentPage) {this.currentPage = currentPage;}
 }

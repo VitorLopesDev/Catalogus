@@ -8,6 +8,7 @@ import lombok.NonNull;
 @Entity
 @Data
 @NoArgsConstructor
+@Table(uniqueConstraints = @UniqueConstraint( columnNames = "title"))
 public class Book {
 
     @Id
@@ -29,5 +30,5 @@ public class Book {
     private Integer pages;
     private String coverUrl;
     private Double rating;
-
+    private Integer currentPage;
 }

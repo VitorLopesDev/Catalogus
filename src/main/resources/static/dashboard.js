@@ -147,6 +147,12 @@ card.innerHTML = `
             <p class="book-meta"><strong>Autor: </strong><span class="js-autor"></span></p>
             <p class="book-meta"><strong>ISBN: </strong><span class="js-isbn"></span></p>
             <span class="book-rating">${exibirEstrelas(livro.rating)}</span>
+            <div class="book-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${calcularProgresso(livro.currentPage, livro.pages)}%"></div>
+                </div>
+                <span class="progress-label">${calcularProgresso(livro.currentPage, livro.pages)}%</span>
+            </div>
             <p class="book-description"></p>
             <div class="book-actions">
                 <button class="btn-editar">✏ Editar</button>
@@ -275,6 +281,12 @@ function abrirModal() {
     document.getElementById('modalOverlay').classList.add('aberto');
 }
 
+function calcularProgresso(currentPage, totalPages) {
+    if (!currentPage || !totalPages) return 0;
+    const progresso = Math.round((currentPage / totalPages) * 100);
+    return Math.min(progresso, 100);
+}
+
 function abrirModalEdicao(livro) {
     tituloEditando = livro.title;
     document.getElementById('modalTitulo').textContent    = 'Editar Obra';
@@ -286,6 +298,7 @@ function abrirModalEdicao(livro) {
     document.getElementById('campoStatus').value = livro.status || 'NAO_LIDO';
     document.getElementById('modalOverlay').classList.add('aberto');
     document.getElementById('campoRating').value = livro.rating || '';
+    document.getElementById('campoCurrentPage').value = livro.currentPage || '';
 }
 
 function fecharModal() {
@@ -304,9 +317,10 @@ async function salvarLivro() {
     const isbn      = document.getElementById('campoIsbn').value.trim();
     const descricao = document.getElementById('campoDescricao').value.trim();
     const rating    = document.getElementById('campoRating').value.trim();
+    const currentPage = document.getElementById('campoCurrentPage').value.trim();
     const email = localStorage.getItem('userEmail');
 
-    const payload = { title: titulo, author: autor, isbn, description: descricao, ownerEmail: email, status, rating };
+    const payload = { title: titulo, author: autor, isbn, description: descricao, ownerEmail: email, status, rating, currentPage };
 
     if (!titulo || !autor) {
         mostrarMensagem('Título e autor são obrigatórios.', 'error');

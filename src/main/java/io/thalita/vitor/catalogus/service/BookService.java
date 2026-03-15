@@ -48,6 +48,7 @@ public class BookService {
         book.setDescription(dto.getDescription());
         book.setOwner(owner);
         book.setRating(dto.getRating());
+        book.setCurrentPage(dto.getCurrentPage());
 
         if (dto.getIsbn() != null && !dto.getIsbn().isBlank()) {
             buscarDadosOpenLibrary(book, dto.getIsbn());
@@ -83,6 +84,7 @@ public class BookService {
         book.setIsbn(dto.getIsbn());
         book.setDescription(dto.getDescription());
         book.setRating(dto.getRating());
+        book.setCurrentPage(dto.getCurrentPage());
 
         bookRepository.saveAndFlush(book);
 
