@@ -146,6 +146,7 @@ card.innerHTML = `
             <h3 class="book-title"></h3>
             <p class="book-meta"><strong>Autor: </strong><span class="js-autor"></span></p>
             <p class="book-meta"><strong>ISBN: </strong><span class="js-isbn"></span></p>
+            <span class="book-rating">${exibirEstrelas(livro.rating)}</span>
             <p class="book-description"></p>
             <div class="book-actions">
                 <button class="btn-editar">✏ Editar</button>
@@ -175,6 +176,14 @@ card.innerHTML = `
     });
 
     return card;
+}
+
+function exibirEstrelas(rating) {
+    if (!rating) return '⯪⯪⯪⯪⯪';
+    const cheias = Math.floor(rating);
+    const meia = rating % 1 >= 0.5 ? '⯪' : '';
+    const vazias = 5 - cheias - (meia ? 1 : 0);
+    return '★'.repeat(cheias) + meia + '⯪'.repeat(vazias);
 }
 
 function atualizarEstatisticas(livros) {
@@ -276,6 +285,7 @@ function abrirModalEdicao(livro) {
     document.getElementById('campoDescricao').value = livro.description || '';
     document.getElementById('campoStatus').value = livro.status || 'NAO_LIDO';
     document.getElementById('modalOverlay').classList.add('aberto');
+    document.getElementById('campoRating').value = livro.rating || '';
 }
 
 function fecharModal() {
@@ -293,8 +303,10 @@ async function salvarLivro() {
     const status    = document.getElementById('campoStatus').value.trim();
     const isbn      = document.getElementById('campoIsbn').value.trim();
     const descricao = document.getElementById('campoDescricao').value.trim();
+    const rating    = document.getElementById('campoRating').value.trim();
     const email = localStorage.getItem('userEmail');
-    const payload = { title: titulo, author: autor, isbn, description: descricao, ownerEmail: email, status };
+
+    const payload = { title: titulo, author: autor, isbn, description: descricao, ownerEmail: email, status, rating };
 
     if (!titulo || !autor) {
         mostrarMensagem('Título e autor são obrigatórios.', 'error');
