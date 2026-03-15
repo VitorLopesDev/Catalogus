@@ -1,9 +1,6 @@
 package io.thalita.vitor.catalogus.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -16,11 +13,21 @@ public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User owner;
+    @Enumerated(EnumType.STRING)
+    private ReadingStatus status = ReadingStatus.NAO_LIDO;
     @NonNull
     private String title;
     @NonNull
     private String author;
     private String isbn;
     private String description;
+    private String publishYear;
+    private String publisher;
+    private Integer pages;
+    private String coverUrl;
+    private Double rating;
 
 }

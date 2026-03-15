@@ -68,7 +68,11 @@ document.getElementById('loginFormElement').addEventListener('submit', async (e)
 document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-
+    const nickname = document.getElementById('registerNickname').value.trim();
+    if (nickname.length < 2){
+            mostrarMensagem('O nome deve ter pelo menos 2 caracteres.')
+            return;
+    }
     const email           = document.getElementById('registerEmail').value.trim();
     const password        = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerPasswordConfirm').value;
@@ -93,12 +97,13 @@ document.getElementById('registerFormElement').addEventListener('submit', async 
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ nickName: nickname, email, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
+            localStorage.setItem('userNickname', data.nickname);
             mostrarMensagem('Conta criada! Faça login para continuar.', 'success');
             document.getElementById('registerFormElement').reset();
 

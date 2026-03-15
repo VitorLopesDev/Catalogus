@@ -1,5 +1,6 @@
 package io.thalita.vitor.catalogus.controller;
 
+import io.thalita.vitor.catalogus.model.User;
 import io.thalita.vitor.catalogus.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,12 +31,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            authService.register(request.getEmail(), request.getPassword());
+            User user = authService.register(request.getNickName(), request.getEmail(), request.getPassword());
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("mensagem", "Usuário registrado com sucesso."));
+                    .body(Map.of("mensage", "Usuário registrado com sucesso.", "nickname", user.getNickName()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("menssagem", e.getMessage()));
+                    .body(Map.of("menssage", e.getMessage()));
         }
     }
 }

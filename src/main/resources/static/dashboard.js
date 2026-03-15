@@ -7,11 +7,58 @@ let tituloEditando = null;
 
 function carregarUsuario() {
     const email = localStorage.getItem('userEmail');
+    const nickname = localStorage.getItem('userNickname');
+
     if (!email) {
         window.location.href = 'index.html';
         return;
     }
-    document.getElementById('navUserEmail').textContent = email;
+    document.getElementById('navUserEmail').textContent = nickname;
+}
+
+function fecharModalDetalhes(event) {
+    if (!event || event.target.id === 'modalDetalhesOverlay') {
+        document.getElementById('modalDetalhesOverlay').classList.remove('aberto');
+    }
+}
+
+async function abrirModalDetalhes(livro) {
+      document.getElementById('detalhesTitulo').textContent    = livro.title;
+      document.getElementById('detalhesAutor').textContent     = livro.author;
+      document.getElementById('detalhesIsbn').textContent      = livro.isbn || 'Não informado';
+      document.getElementById('detalhesAno').textContent       = livro.publishYear || 'Não informado';
+      document.getElementById('detalhesEditora').textContent   = livro.publisher || 'Não informado';
+      document.getElementById('detalhesPaginas').textContent   = livro.pages || 'Não informado';
+      document.getElementById('detalhesStatus').textContent    = livro.status === 'LIDO' ? '✓ Lido' : livro.status === 'LENDO' ? '📖 Lendo' : '○ Não lido';
+      document.getElementById('detalhesDescricao').textContent = livro.description || 'Sem descrição';
+      document.getElementById('detalhesCapa').src              = livro.coverUrl || '';
+
+      document.getElementById('modalDetalhesOverlay').classList.add('aberto');
+    if (livro.isbn) {
+        try {
+            const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${livro.isbn}&format=json&jscmd=data`);
+            const data = await response.json();
+            const info = data[`ISBN:${livro.isbn}`];
+
+            if (info) {
+                document.getElementById('detalhesAno').textContent     = info.publish_date || 'Não encontrado';
+                document.getElementById('detalhesEditora').textContent = info.publishers?.[0]?.name || 'Não encontrado';
+                document.getElementById('detalhesPaginas').textContent = info.number_of_pages || 'Não encontrado';
+            } else {
+                document.getElementById('detalhesAno').textContent     = 'Não encontrado';
+                document.getElementById('detalhesEditora').textContent = 'Não encontrado';
+                document.getElementById('detalhesPaginas').textContent = 'Não encontrado';
+            }
+        } catch (error) {
+            document.getElementById('detalhesAno').textContent     = 'Erro ao buscar';
+            document.getElementById('detalhesEditora').textContent = 'Erro ao buscar';
+            document.getElementById('detalhesPaginas').textContent = 'Erro ao buscar';
+        }
+    } else {
+        document.getElementById('detalhesAno').textContent     = 'ISBN necessário';
+        document.getElementById('detalhesEditora').textContent = 'ISBN necessário';
+        document.getElementById('detalhesPaginas').textContent = 'ISBN necessário';
+    }
 }
 
 function logout() {
@@ -89,9 +136,13 @@ function criarCard(livro, index = 0) {
 
     card.style.animationDelay = `${index * 80}ms`;
 
-    card.innerHTML = `
-        <div class="book-spine"></div>
-        <div class="book-content">
+card.innerHTML = `
+    <div class="book-spine"></div>
+    <div class="book-content">
+        <div class="book-info">
+            <span class="book-status status-${livro.status || 'NAO_LIDO'}">
+                ${livro.status === 'LIDO' ? '✓ Lido' : livro.status === 'LENDO' ? '📖 Lendo' : '○ Não lido'}
+            </span>
             <h3 class="book-title"></h3>
             <p class="book-meta"><strong>Autor: </strong><span class="js-autor"></span></p>
             <p class="book-meta"><strong>ISBN: </strong><span class="js-isbn"></span></p>
@@ -100,7 +151,15 @@ function criarCard(livro, index = 0) {
                 <button class="btn-editar">✏ Editar</button>
                 <button class="btn-deletar">✕ Remover</button>
             </div>
-        </div>`;
+        </div>
+        <div class="book-cover">
+            <img
+                src="https://covers.openlibrary.org/b/isbn/${livro.isbn}-M.jpg"
+                alt="Capa de ${livro.title}"
+                onerror="this.style.display='none'"
+            >
+        </div>
+    </div>`;
 
     card.querySelector('.book-title').textContent       = livro.title;
     card.querySelector('.js-autor').textContent         = livro.author;
@@ -109,6 +168,11 @@ function criarCard(livro, index = 0) {
 
     card.querySelector('.btn-editar').addEventListener('click', () => abrirModalEdicao(livro));
     card.querySelector('.btn-deletar').addEventListener('click', () => deletarLivro(livro.title));
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('.btn-editar') && !e.target.closest('.btn-deletar')) {
+            abrirModalDetalhes(livro);
+        }
+    });
 
     return card;
 }
@@ -210,6 +274,7 @@ function abrirModalEdicao(livro) {
     document.getElementById('campoAutor').value     = livro.author;
     document.getElementById('campoIsbn').value      = livro.isbn || '';
     document.getElementById('campoDescricao').value = livro.description || '';
+    document.getElementById('campoStatus').value = livro.status || 'NAO_LIDO';
     document.getElementById('modalOverlay').classList.add('aberto');
 }
 
@@ -225,15 +290,16 @@ function fecharModalFora(event) {
 async function salvarLivro() {
     const titulo    = document.getElementById('campoTitulo').value.trim();
     const autor     = document.getElementById('campoAutor').value.trim();
+    const status    = document.getElementById('campoStatus').value.trim();
     const isbn      = document.getElementById('campoIsbn').value.trim();
     const descricao = document.getElementById('campoDescricao').value.trim();
+    const email = localStorage.getItem('userEmail');
+    const payload = { title: titulo, author: autor, isbn, description: descricao, ownerEmail: email, status };
 
     if (!titulo || !autor) {
         mostrarMensagem('Título e autor são obrigatórios.', 'error');
         return;
     }
-
-    const payload = { title: titulo, author: autor, isbn, description: descricao };
 
     try {
         let response;

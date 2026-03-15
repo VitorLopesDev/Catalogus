@@ -27,16 +27,21 @@ public class AuthService {
         return passwordEncoder.matches(password, user.getPassword());
     }
 
-    public void register(String email, String password) {
+    public User register(String nickName, String email, String password) {
         if (userRepository.findByEmail(email) != null) {
             throw new RuntimeException("Usuário já existe");
         }
 
+        if (userRepository.findByNickName(nickName) != null) {
+            throw new RuntimeException("O nick name já está cadastrado");
+        }
+
         User user = new User();
+        user.setNickName(nickName);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole("ROLE_USER");
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 }
