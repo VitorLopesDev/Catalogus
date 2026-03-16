@@ -23,42 +23,17 @@ function fecharModalDetalhes(event) {
 }
 
 async function abrirModalDetalhes(livro) {
-      document.getElementById('detalhesTitulo').textContent    = livro.title;
-      document.getElementById('detalhesAutor').textContent     = livro.author;
-      document.getElementById('detalhesIsbn').textContent      = livro.isbn || 'Não informado';
-      document.getElementById('detalhesAno').textContent       = livro.publishYear || 'Não informado';
-      document.getElementById('detalhesEditora').textContent   = livro.publisher || 'Não informado';
-      document.getElementById('detalhesPaginas').textContent   = livro.pages || 'Não informado';
-      document.getElementById('detalhesStatus').textContent    = livro.status === 'LIDO' ? '✓ Lido' : livro.status === 'LENDO' ? '📖 Lendo' : '○ Não lido';
-      document.getElementById('detalhesDescricao').textContent = livro.description || 'Sem descrição';
-      document.getElementById('detalhesCapa').src              = livro.coverUrl || '';
+    document.getElementById('detalhesTitulo').textContent    = livro.title;
+    document.getElementById('detalhesAutor').textContent     = livro.author;
+    document.getElementById('detalhesIsbn').textContent      = livro.isbn || 'Não informado';
+    document.getElementById('detalhesAno').textContent       = livro.publishYear || 'Não informado';
+    document.getElementById('detalhesEditora').textContent   = livro.publisher || 'Não informado';
+    document.getElementById('detalhesPaginas').textContent   = livro.pages || 'Não informado';
+    document.getElementById('detalhesStatus').textContent    = livro.status === 'LIDO' ? '✓ Lido' : livro.status === 'LENDO' ? '📖 Lendo' : '○ Não lido';
+    document.getElementById('detalhesDescricao').textContent = livro.description || 'Sem descrição';
+    document.getElementById('detalhesCapa').src              = livro.coverUrl || '';
 
-      document.getElementById('modalDetalhesOverlay').classList.add('aberto');
-    if (livro.isbn) {
-        try {
-            const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${livro.isbn}&format=json&jscmd=data`);
-            const data = await response.json();
-            const info = data[`ISBN:${livro.isbn}`];
-
-            if (info) {
-                document.getElementById('detalhesAno').textContent     = info.publish_date || 'Não encontrado';
-                document.getElementById('detalhesEditora').textContent = info.publishers?.[0]?.name || 'Não encontrado';
-                document.getElementById('detalhesPaginas').textContent = info.number_of_pages || 'Não encontrado';
-            } else {
-                document.getElementById('detalhesAno').textContent     = 'Não encontrado';
-                document.getElementById('detalhesEditora').textContent = 'Não encontrado';
-                document.getElementById('detalhesPaginas').textContent = 'Não encontrado';
-            }
-        } catch (error) {
-            document.getElementById('detalhesAno').textContent     = 'Erro ao buscar';
-            document.getElementById('detalhesEditora').textContent = 'Erro ao buscar';
-            document.getElementById('detalhesPaginas').textContent = 'Erro ao buscar';
-        }
-    } else {
-        document.getElementById('detalhesAno').textContent     = 'ISBN necessário';
-        document.getElementById('detalhesEditora').textContent = 'ISBN necessário';
-        document.getElementById('detalhesPaginas').textContent = 'ISBN necessário';
-    }
+    document.getElementById('modalDetalhesOverlay').classList.add('aberto');
 }
 
 function logout() {
@@ -184,12 +159,19 @@ card.innerHTML = `
     return card;
 }
 
+function atualizarCampoPagina() {
+    const status = document.getElementById('campoStatus').value;
+    const grupo = document.getElementById('grupoPaginaAtual');
+    grupo.style.display = status === 'LENDO' ? 'block' : 'none';
+}
+
 function exibirEstrelas(rating) {
-    if (!rating) return '⯪⯪⯪⯪⯪';
+    if (!rating) return '';
+    rating = parseFloat(rating);
     const cheias = Math.floor(rating);
     const meia = rating % 1 >= 0.5 ? '⯪' : '';
     const vazias = 5 - cheias - (meia ? 1 : 0);
-    return '★'.repeat(cheias) + meia + '⯪'.repeat(vazias);
+    return '★'.repeat(cheias) + meia + ''.repeat(vazias);
 }
 
 function atualizarEstatisticas(livros) {
@@ -279,6 +261,7 @@ function abrirModal() {
     document.getElementById('btnSalvarTexto').textContent = 'Registrar Obra';
     document.getElementById('livroForm').reset();
     document.getElementById('modalOverlay').classList.add('aberto');
+    atualizarCampoPagina();
 }
 
 function calcularProgresso(currentPage, totalPages) {
@@ -299,6 +282,7 @@ function abrirModalEdicao(livro) {
     document.getElementById('modalOverlay').classList.add('aberto');
     document.getElementById('campoRating').value = livro.rating || '';
     document.getElementById('campoCurrentPage').value = livro.currentPage || '';
+    atualizarCampoPagina();
 }
 
 function fecharModal() {

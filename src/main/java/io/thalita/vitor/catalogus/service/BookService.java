@@ -53,6 +53,14 @@ public class BookService {
         if (dto.getIsbn() != null && !dto.getIsbn().isBlank()) {
             buscarDadosOpenLibrary(book, dto.getIsbn());
         }
+        if (dto.getStatus() == ReadingStatus.NAO_LIDO) {
+            book.setCurrentPage(0);
+        } else if (dto.getStatus() == ReadingStatus.LIDO) {
+            book.setCurrentPage(book.getPages());
+        }else{
+            book.setCurrentPage(book.getCurrentPage());
+        }
+
         return bookRepository.save(book);
     }
 
@@ -85,6 +93,17 @@ public class BookService {
         book.setDescription(dto.getDescription());
         book.setRating(dto.getRating());
         book.setCurrentPage(dto.getCurrentPage());
+
+        if (dto.getIsbn() != null && !dto.getIsbn().isBlank()) {
+            buscarDadosOpenLibrary(book, dto.getIsbn());
+        }
+        if (dto.getStatus() == ReadingStatus.NAO_LIDO) {
+            book.setCurrentPage(0);
+        } else if (dto.getStatus() == ReadingStatus.LIDO) {
+            book.setCurrentPage(book.getPages());
+        }else{
+            book.setCurrentPage(book.getCurrentPage());
+        }
 
         bookRepository.saveAndFlush(book);
 
