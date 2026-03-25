@@ -9,7 +9,7 @@ suas leituras de forma prática e intuitiva.
 ## Tecnologias
 - Java + Spring Boot
 - HTML, CSS, JavaScript
-- Banco de dados - H2
+- Banco de dados - SQLite
 
 ## Como rodar
  No terminal colocar o comando "mvn spring-boot:run" ou rodar pela própria IDE
