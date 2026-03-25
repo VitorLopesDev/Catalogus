@@ -44,6 +44,7 @@ function toggleSino() {
     sino.style.display   = sino.style.display === 'none' ? 'block' : 'none';
 }
 
+// Fecha painéis ao clicar fora
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.nav-amigos-wrapper')) {
         document.getElementById('painelAmigos').style.display = 'none';
@@ -69,10 +70,13 @@ async function carregarAmigos() {
         }
 
         lista.innerHTML = amigos.map(amigo => `
-            <div class="amigo-item" onclick="verAcervoAmigo('${amigo.nickName}')">
+            <div class="amigo-item">
                 <span class="amigo-avatar">👤</span>
-                <span class="amigo-nome">${amigo.nickName}</span>
-                <span class="amigo-seta">→</span>
+                <span class="amigo-nome" onclick="verAcervoAmigo('${amigo.nickName}')">${amigo.nickName}</span>
+                <div class="amigo-acoes">
+                    <span class="amigo-seta" onclick="verAcervoAmigo('${amigo.nickName}')">→</span>
+                    <button class="btn-remover-amigo" onclick="removerAmigo('${amigo.nickName}')" title="Desfazer amizade">✕</button>
+                </div>
             </div>
         `).join('');
 
@@ -80,6 +84,7 @@ async function carregarAmigos() {
         console.error('Erro ao carregar amigos:', error);
     }
 }
+
 
 async function carregarPendentes() {
     const email = localStorage.getItem('userEmail');
@@ -197,6 +202,29 @@ async function recusarSolicitacao(id) {
         }
     } catch (error) {
         console.error('Erro ao recusar:', error);
+    }
+}
+
+async function removerAmigo(nickname) {
+    if (!confirm(`Deseja desfazer a amizade com ${nickname}?`)) return;
+    const email = localStorage.getItem('userEmail');
+
+    try {
+        const response = await fetch(
+            `${API_URL}/friends/remove?email=${encodeURIComponent(email)}&friendNickname=${encodeURIComponent(nickname)}`,
+            { method: 'DELETE' }
+        );
+
+        if (response.ok) {
+            mostrarMensagem(`Amizade com ${nickname} desfeita.`, 'info');
+            carregarAmigos();
+        } else {
+            const data = await response.json().catch(() => ({}));
+            mostrarMensagem(data.message || 'Erro ao desfazer amizade.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao remover amigo:', error);
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
 
@@ -478,6 +506,7 @@ async function buscarPorIsbn() {
 
     mostrarMensagem('Buscando livro...', 'info');
 
+    // Tenta Google Books primeiro, cai para Open Library se não encontrar
     const encontrado = await buscarIsbnGoogleBooks(isbn) || await buscarIsbnOpenLibrary(isbn);
 
     if (!encontrado) {
@@ -523,6 +552,7 @@ async function buscarIsbnGoogleBooks(isbn) {
     }
 }
 
+
 function abrirModal() {
     tituloEditando = null;
     document.getElementById('modalTitulo').textContent    = 'Nova Obra';
@@ -566,6 +596,7 @@ function fecharModalFora(event) {
     if (event.target.id === 'modalOverlay') fecharModal();
 }
 
+
 async function salvarLivro() {
     const titulo      = document.getElementById('campoTitulo').value.trim();
     const autor       = document.getElementById('campoAutor').value.trim();
@@ -602,6 +633,7 @@ async function salvarLivro() {
     }
 }
 
+
 async function deletarLivro(titulo) {
     if (!confirm(`Deseja remover "${titulo}" do acervo?`)) return;
     const email = localStorage.getItem('userEmail');
@@ -622,6 +654,7 @@ async function deletarLivro(titulo) {
         mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
+
 
 function mostrarMensagem(texto, tipo = 'info') {
     const el = document.getElementById('message');
