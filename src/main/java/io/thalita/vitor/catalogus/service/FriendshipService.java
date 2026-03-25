@@ -31,8 +31,15 @@ public class FriendshipService {
         Optional<Friendship> existing = friendshipRepository.findBySenderAndReceiver(sender, receiver);
         Optional<Friendship> reverse  = friendshipRepository.findBySenderAndReceiver(receiver, sender);
 
-        if (existing.isPresent() || reverse.isPresent()) {
-            throw new RuntimeException("Solicitação já enviada ou vocês já são amigos");
+        if (existing.isPresent()) {
+            FriendshipStatus status = existing.get().getStatus();
+            if (status == FriendshipStatus.PENDENTE) throw new RuntimeException("Solicitação já enviada");
+            if (status == FriendshipStatus.ACEITO)   throw new RuntimeException("Vocês já são amigos");
+        }
+        if (reverse.isPresent()) {
+            FriendshipStatus status = reverse.get().getStatus();
+            if (status == FriendshipStatus.PENDENTE) throw new RuntimeException("Este usuário já te enviou uma solicitação");
+            if (status == FriendshipStatus.ACEITO)   throw new RuntimeException("Vocês já são amigos");
         }
 
         Friendship friendship = new Friendship();
@@ -65,6 +72,18 @@ public class FriendshipService {
 
         friendship.setStatus(FriendshipStatus.RECUSADO);
         return friendshipRepository.save(friendship);
+    }
+
+    public void removeFriend(String userEmail, String friendNickname) {
+        User user   = userRepository.findByEmail(userEmail);
+        User friend = userRepository.findByNickName(friendNickname);
+
+        if (user == null || friend == null) throw new RuntimeException("Usuário não encontrado");
+
+        Friendship friendship = friendshipRepository.findAcceptedFriendship(user, friend)
+                .orElseThrow(() -> new RuntimeException("Amizade não encontrada"));
+
+        friendshipRepository.delete(friendship);
     }
 
     public List<User> listFriends(String email) {

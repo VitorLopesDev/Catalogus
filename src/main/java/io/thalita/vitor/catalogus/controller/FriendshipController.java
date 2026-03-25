@@ -53,6 +53,17 @@ public class FriendshipController {
         }
     }
 
+    @DeleteMapping("/remove")
+    public ResponseEntity<?> removeFriend(@RequestParam String email,
+                                          @RequestParam String friendNickname) {
+        try {
+            friendshipService.removeFriend(email, friendNickname);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     @GetMapping("/list")
     public ResponseEntity<?> listFriends(@RequestParam String email) {
         try {
