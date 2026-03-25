@@ -4,7 +4,6 @@ let livrosCached = [];
 let abaAtual     = 'todos';
 let friendNickname = '';
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 
 window.addEventListener('load', () => {
     const email = localStorage.getItem('userEmail');
@@ -27,7 +26,6 @@ function voltarDashboard() {
     window.location.href = 'dashboard.html';
 }
 
-// ─── Carregar livros do amigo ─────────────────────────────────────────────────
 
 async function carregarLivrosAmigo() {
     const email = localStorage.getItem('userEmail');
@@ -76,7 +74,6 @@ async function carregarLivrosAmigo() {
     }
 }
 
-// ─── Abas ─────────────────────────────────────────────────────────────────────
 
 function mudarAba(aba) {
     abaAtual = aba;
@@ -93,7 +90,6 @@ function renderizarAbaAtual() {
     if (abaAtual === 'favoritos')  renderizarCards(livrosCached.filter(l => l.favorite));
 }
 
-// ─── Renderizar cards (somente leitura) ───────────────────────────────────────
 
 function renderizarCards(livros) {
     const grid       = document.getElementById('booksGrid');
@@ -168,7 +164,6 @@ function criarCard(livro, index = 0) {
     return card;
 }
 
-// ─── Modal Detalhes ───────────────────────────────────────────────────────────
 
 function fecharModalDetalhes(event) {
     if (!event || event.target.id === 'modalDetalhesOverlay') {
@@ -190,7 +185,6 @@ function abrirModalDetalhes(livro) {
     document.getElementById('modalDetalhesOverlay').classList.add('aberto');
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function exibirEstrelas(rating) {
     if (!rating) return '';

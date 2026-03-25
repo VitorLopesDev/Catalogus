@@ -43,7 +43,7 @@ public class BookService {
         book.setRating(dto.getRating());
 
         if (dto.getIsbn() != null && !dto.getIsbn().isBlank()) {
-            buscarDadosOpenLibrary(book, dto.getIsbn());
+            buscarDadosLivro(book, dto.getIsbn());
         }
 
         if (dto.getStatus() == ReadingStatus.NAO_LIDO) {
@@ -96,7 +96,7 @@ public class BookService {
         book.setRating(dto.getRating());
 
         if (dto.getIsbn() != null && !dto.getIsbn().isBlank()) {
-            buscarDadosOpenLibrary(book, dto.getIsbn());
+            buscarDadosLivro(book, dto.getIsbn());
         }
 
         if (dto.getStatus() == ReadingStatus.NAO_LIDO) {
@@ -125,25 +125,79 @@ public class BookService {
         return bookRepository.save(book);
     }
 
-    private void buscarDadosOpenLibrary(Book book, String isbn) {
+    private void buscarDadosLivro(Book book, String isbn) {
+        boolean sucesso = buscarDadosGoogleBooks(book, isbn);
+        if (!sucesso) {
+            buscarDadosOpenLibrary(book, isbn);
+        }
+    }
+
+    private boolean buscarDadosOpenLibrary(Book book, String isbn) {
         try {
             String url = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&format=json&jscmd=data";
             String json = restTemplate.getForObject(url, String.class);
+
+            if (json == null || json.isBlank() || json.equals("{}")) return false;
 
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
             com.fasterxml.jackson.databind.JsonNode info = root.get("ISBN:" + isbn);
 
-            if (info != null) {
-                if (info.has("publish_date"))
-                    book.setPublishYear(info.get("publish_date").asText());
-                if (info.has("publishers") && info.get("publishers").size() > 0)
-                    book.setPublisher(info.get("publishers").get(0).get("name").asText());
-                if (info.has("number_of_pages"))
-                    book.setPages(info.get("number_of_pages").asInt());
+            if (info == null) return false;
+
+            if (info.has("publish_date"))
+                book.setPublishYear(info.get("publish_date").asText());
+            if (info.has("publishers") && info.get("publishers").size() > 0)
+                book.setPublisher(info.get("publishers").get(0).get("name").asText());
+            if (info.has("number_of_pages"))
+                book.setPages(info.get("number_of_pages").asInt());
+            book.setCoverUrl("https://covers.openlibrary.org/b/isbn/" + isbn + "-M.jpg");
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
+    private boolean buscarDadosGoogleBooks(Book book, String isbn) {
+        try {
+            String url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn;
+            String json = restTemplate.getForObject(url, String.class);
+
+            if (json == null || json.isBlank()) return false;
+
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json);
+
+            int totalItems = root.path("totalItems").asInt(0);
+            if (totalItems == 0) return false;
+
+            com.fasterxml.jackson.databind.JsonNode volumeInfo = root
+                    .path("items").path(0).path("volumeInfo");
+
+            if (volumeInfo.isMissingNode()) return false;
+
+            if (volumeInfo.has("publishedDate"))
+                book.setPublishYear(volumeInfo.get("publishedDate").asText());
+
+            if (volumeInfo.has("publisher"))
+                book.setPublisher(volumeInfo.get("publisher").asText());
+
+            if (volumeInfo.has("pageCount"))
+                book.setPages(volumeInfo.get("pageCount").asInt());
+
+            com.fasterxml.jackson.databind.JsonNode imageLinks = volumeInfo.path("imageLinks");
+            if (!imageLinks.isMissingNode() && imageLinks.has("thumbnail")) {
+                String cover = imageLinks.get("thumbnail").asText().replace("http://", "https://");
+                book.setCoverUrl(cover);
+            } else {
                 book.setCoverUrl("https://covers.openlibrary.org/b/isbn/" + isbn + "-M.jpg");
             }
+
+            return true;
         } catch (Exception e) {
+            return false;
         }
     }
 }

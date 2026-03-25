@@ -1207,7 +1207,6 @@ body {
     }
 }
 
-/* ─── Abas do dashboard ─────────────────────────────────────────────────────── */
 .dashboard-tabs {
     margin-bottom: 0;
     border-bottom: 2px solid var(--cor-papel-escuro);
@@ -1219,7 +1218,6 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* ─── Botão favorito ─────────────────────────────────────────────────────────── */
 .book-top-row {
     display: flex;
     align-items: center;
@@ -1230,18 +1228,19 @@ body {
 .btn-favorito {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 25px;
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 2px 0px;
     border-radius: 4px;
     line-height: 1;
+    margin-right: -85px;
     transition: transform 0.2s ease, opacity 0.2s ease;
     opacity: 0.4;
     filter: grayscale(1);
 }
 
 .btn-favorito:hover {
-    transform: scale(1.2);
+    transform: scale(1.0);
     opacity: 0.8;
 }
 
@@ -1257,7 +1256,6 @@ body {
     100% { transform: scale(1); }
 }
 
-/* ─── Navbar icons ───────────────────────────────────────────────────────────── */
 .btn-nav-icon {
     background: transparent;
     border: 1.5px solid rgba(201, 168, 76, 0.5);
@@ -1279,7 +1277,6 @@ body {
     border-color: var(--cor-dourado);
 }
 
-/* ─── Sino contador ──────────────────────────────────────────────────────────── */
 .sino-contador {
     position: absolute;
     top: -4px;
@@ -1297,7 +1294,6 @@ body {
     font-weight: 700;
 }
 
-/* ─── Painéis dropdown ───────────────────────────────────────────────────────── */
 .nav-notif-wrapper,
 .nav-amigos-wrapper {
     position: relative;
@@ -1344,7 +1340,6 @@ body {
     padding: 16px;
 }
 
-/* ─── Item de amigo ──────────────────────────────────────────────────────────── */
 .amigo-item {
     display: flex;
     align-items: center;
@@ -1376,7 +1371,6 @@ body {
     opacity: 0.5;
 }
 
-/* ─── Item pendente ──────────────────────────────────────────────────────────── */
 .pendente-item {
     display: flex;
     align-items: center;
@@ -1424,7 +1418,6 @@ body {
     color: #fff;
 }
 
-/* ─── Botão adicionar amigo ──────────────────────────────────────────────────── */
 .btn-adicionar-amigo {
     width: 100%;
     padding: 11px 16px;
@@ -1444,7 +1437,6 @@ body {
     background: rgba(139, 69, 19, 0.06);
 }
 
-/* ─── Favorito somente leitura (friend.html) ─────────────────────────────────── */
 .fav-readonly {
     font-size: 16px;
     opacity: 0.85;

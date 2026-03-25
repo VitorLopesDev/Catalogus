@@ -4,7 +4,6 @@ let livrosCached  = [];
 let tituloEditando = null;
 let abaAtual       = 'biblioteca';
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 
 window.addEventListener('load', () => {
     carregarUsuario();
@@ -13,7 +12,6 @@ window.addEventListener('load', () => {
     carregarPendentes();
 });
 
-// ─── Usuário ──────────────────────────────────────────────────────────────────
 
 function carregarUsuario() {
     const email    = localStorage.getItem('userEmail');
@@ -31,7 +29,6 @@ function logout() {
     window.location.href = 'index.html';
 }
 
-// ─── Amigos — painel ─────────────────────────────────────────────────────────
 
 function togglePainelAmigos() {
     const painel = document.getElementById('painelAmigos');
@@ -47,7 +44,6 @@ function toggleSino() {
     sino.style.display   = sino.style.display === 'none' ? 'block' : 'none';
 }
 
-// Fecha painéis ao clicar fora
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.nav-amigos-wrapper')) {
         document.getElementById('painelAmigos').style.display = 'none';
@@ -57,7 +53,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ─── Amigos — carregar lista ──────────────────────────────────────────────────
 
 async function carregarAmigos() {
     const email = localStorage.getItem('userEmail');
@@ -85,8 +80,6 @@ async function carregarAmigos() {
         console.error('Erro ao carregar amigos:', error);
     }
 }
-
-// ─── Amigos — pendentes ───────────────────────────────────────────────────────
 
 async function carregarPendentes() {
     const email = localStorage.getItem('userEmail');
@@ -123,7 +116,6 @@ async function carregarPendentes() {
     }
 }
 
-// ─── Amigos — ações ───────────────────────────────────────────────────────────
 
 function abrirModalAmigo() {
     document.getElementById('painelAmigos').style.display = 'none';
@@ -213,7 +205,6 @@ function verAcervoAmigo(nickname) {
     window.location.href = `friend.html?nickname=${encodeURIComponent(nickname)}`;
 }
 
-// ─── Abas ─────────────────────────────────────────────────────────────────────
 
 function mudarAba(aba) {
     abaAtual = aba;
@@ -231,7 +222,6 @@ function renderizarAbaAtual() {
     }
 }
 
-// ─── Favoritar ────────────────────────────────────────────────────────────────
 
 async function toggleFavorito(titulo, event) {
     event.stopPropagation();
@@ -256,7 +246,6 @@ async function toggleFavorito(titulo, event) {
     }
 }
 
-// ─── Modal Detalhes ───────────────────────────────────────────────────────────
 
 function fecharModalDetalhes(event) {
     if (!event || event.target.id === 'modalDetalhesOverlay') {
@@ -278,7 +267,6 @@ async function abrirModalDetalhes(livro) {
     document.getElementById('modalDetalhesOverlay').classList.add('aberto');
 }
 
-// ─── Carregar livros ──────────────────────────────────────────────────────────
 
 async function carregarLivros() {
     const grid       = document.getElementById('booksGrid');
@@ -323,7 +311,6 @@ async function carregarLivros() {
     }
 }
 
-// ─── Renderizar cards ─────────────────────────────────────────────────────────
 
 function renderizarCards(livros, isFavoritos = false) {
     const grid       = document.getElementById('booksGrid');
@@ -401,19 +388,14 @@ function criarCard(livro, index = 0) {
     card.querySelector('.js-isbn').textContent          = livro.isbn || 'Não informado';
     card.querySelector('.book-description').textContent = livro.description || '';
 
-    card.querySelector('.btn-favorito').addEventListener('click', (e) => toggleFavorito(livro.title, e));
-    card.querySelector('.btn-editar').addEventListener('click',   () => abrirModalEdicao(livro));
-    card.querySelector('.btn-deletar').addEventListener('click',  () => deletarLivro(livro.title));
-    card.addEventListener('click', (e) => {
-        if (!e.target.closest('.btn-editar') && !e.target.closest('.btn-deletar') && !e.target.closest('.btn-favorito')) {
-            abrirModalDetalhes(livro);
-        }
-    });
+    card.querySelector('.btn-favorito').addEventListener('click', (e) => { e.stopPropagation(); toggleFavorito(livro.title, e); });
+    card.querySelector('.btn-editar').addEventListener('click',   (e) => { e.stopPropagation(); abrirModalEdicao(livro); });
+    card.querySelector('.btn-deletar').addEventListener('click',  (e) => { e.stopPropagation(); deletarLivro(livro.title); });
+    card.addEventListener('click', () => abrirModalDetalhes(livro));
 
     return card;
 }
 
-// ─── Status / Rating ──────────────────────────────────────────────────────────
 
 function atualizarCampoPagina() {
     const status = document.getElementById('campoStatus').value;
@@ -427,7 +409,6 @@ function exibirEstrelas(rating) {
     return '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '⯪' : '');
 }
 
-// ─── Estatísticas ─────────────────────────────────────────────────────────────
 
 function atualizarEstatisticas(livros) {
     animarNumero('statTotal',   livros.length);
@@ -446,7 +427,6 @@ function animarNumero(elementId, valorFinal) {
     }, 16);
 }
 
-// ─── Busca ────────────────────────────────────────────────────────────────────
 
 function filtrarLivros(termo) {
     const btnLimpar = document.getElementById('btnLimparBusca');
@@ -491,7 +471,6 @@ function atualizarContador(visiveis, total) {
         : `${visiveis} de ${total} obras`;
 }
 
-// ─── ISBN ─────────────────────────────────────────────────────────────────────
 
 async function buscarPorIsbn() {
     const isbn = document.getElementById('campoIsbn').value.trim();
@@ -499,24 +478,50 @@ async function buscarPorIsbn() {
 
     mostrarMensagem('Buscando livro...', 'info');
 
+    const encontrado = await buscarIsbnGoogleBooks(isbn) || await buscarIsbnOpenLibrary(isbn);
+
+    if (!encontrado) {
+        mostrarMensagem('ISBN não encontrado em nenhuma base de dados.', 'error');
+    }
+}
+
+async function buscarIsbnOpenLibrary(isbn) {
     try {
         const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
         const data     = await response.json();
         const info     = data[`ISBN:${isbn}`];
 
-        if (!info) { mostrarMensagem('ISBN não encontrado na base de dados.', 'error'); return; }
+        if (!info) return false;
 
         document.getElementById('campoTitulo').value = info.title || '';
         document.getElementById('campoAutor').value  = info.authors?.[0]?.name || '';
         document.getElementById('dadosLivro').style.display = 'block';
         mostrarMensagem('Livro encontrado!', 'success');
-
-    } catch (error) {
-        mostrarMensagem('Erro ao conectar com a base de dados.', 'error');
+        return true;
+    } catch {
+        return false;
     }
 }
 
-// ─── Modal Adicionar/Editar ───────────────────────────────────────────────────
+async function buscarIsbnGoogleBooks(isbn) {
+    try {
+        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+        const data     = await response.json();
+
+        if (!data.totalItems || data.totalItems === 0) return false;
+
+        const info = data.items?.[0]?.volumeInfo;
+        if (!info) return false;
+
+        document.getElementById('campoTitulo').value = info.title || '';
+        document.getElementById('campoAutor').value  = info.authors?.[0] || '';
+        document.getElementById('dadosLivro').style.display = 'block';
+        mostrarMensagem('Livro encontrado via Google Books!', 'success');
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 function abrirModal() {
     tituloEditando = null;
@@ -561,8 +566,6 @@ function fecharModalFora(event) {
     if (event.target.id === 'modalOverlay') fecharModal();
 }
 
-// ─── Salvar ───────────────────────────────────────────────────────────────────
-
 async function salvarLivro() {
     const titulo      = document.getElementById('campoTitulo').value.trim();
     const autor       = document.getElementById('campoAutor').value.trim();
@@ -599,8 +602,6 @@ async function salvarLivro() {
     }
 }
 
-// ─── Deletar ──────────────────────────────────────────────────────────────────
-
 async function deletarLivro(titulo) {
     if (!confirm(`Deseja remover "${titulo}" do acervo?`)) return;
     const email = localStorage.getItem('userEmail');
@@ -621,8 +622,6 @@ async function deletarLivro(titulo) {
         mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
-
-// ─── Mensagem ─────────────────────────────────────────────────────────────────
 
 function mostrarMensagem(texto, tipo = 'info') {
     const el = document.getElementById('message');
