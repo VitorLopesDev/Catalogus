@@ -1207,6 +1207,7 @@ body {
     }
 }
 
+/* ─── Abas do dashboard ─────────────────────────────────────────────────────── */
 .dashboard-tabs {
     margin-bottom: 0;
     border-bottom: 2px solid var(--cor-papel-escuro);
@@ -1218,6 +1219,7 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* ─── Botão favorito ─────────────────────────────────────────────────────────── */
 .book-top-row {
     display: flex;
     align-items: center;
@@ -1228,15 +1230,14 @@ body {
 .btn-favorito {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 18px;
     cursor: pointer;
-    padding: 2px 8px;
+    padding: 2px 4px;
     border-radius: 4px;
     line-height: 1;
     transition: transform 0.2s ease, opacity 0.2s ease;
     opacity: 0.4;
     filter: grayscale(1);
-    margin-right: -100px;
 }
 
 .btn-favorito:hover {
@@ -1254,4 +1255,197 @@ body {
     0%   { transform: scale(1); }
     50%  { transform: scale(1.4); }
     100% { transform: scale(1); }
+}
+
+/* ─── Navbar icons ───────────────────────────────────────────────────────────── */
+.btn-nav-icon {
+    background: transparent;
+    border: 1.5px solid rgba(201, 168, 76, 0.5);
+    color: var(--cor-dourado);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.btn-nav-icon:hover {
+    background: rgba(201, 168, 76, 0.15);
+    border-color: var(--cor-dourado);
+}
+
+/* ─── Sino contador ──────────────────────────────────────────────────────────── */
+.sino-contador {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--cor-erro);
+    color: #fff;
+    font-size: 10px;
+    font-family: var(--fonte-corpo);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* ─── Painéis dropdown ───────────────────────────────────────────────────────── */
+.nav-notif-wrapper,
+.nav-amigos-wrapper {
+    position: relative;
+}
+
+.painel-sino,
+.painel-amigos {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 260px;
+    background: var(--cor-papel);
+    border: 1.5px solid var(--cor-dourado);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(44, 24, 16, 0.2);
+    z-index: 300;
+    animation: fadeInUp 0.2s ease;
+}
+
+.painel-sino-header,
+.painel-amigos-header {
+    font-family: var(--fonte-titulo);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cor-couro);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--cor-papel-escuro);
+    letter-spacing: 0.5px;
+}
+
+.lista-amigos,
+.lista-pendentes {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.painel-vazio {
+    font-family: var(--fonte-corpo);
+    font-size: 13px;
+    color: var(--cor-tinta-suave);
+    font-style: italic;
+    text-align: center;
+    padding: 16px;
+}
+
+/* ─── Item de amigo ──────────────────────────────────────────────────────────── */
+.amigo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.amigo-item:hover {
+    background: rgba(201, 168, 76, 0.08);
+}
+
+.amigo-avatar {
+    font-size: 18px;
+    opacity: 0.7;
+}
+
+.amigo-nome {
+    flex: 1;
+    font-family: var(--fonte-corpo);
+    font-size: 14px;
+    color: var(--cor-tinta);
+}
+
+.amigo-seta {
+    font-size: 12px;
+    color: var(--cor-tinta-suave);
+    opacity: 0.5;
+}
+
+/* ─── Item pendente ──────────────────────────────────────────────────────────── */
+.pendente-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+}
+
+.pendente-acoes {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.btn-aceitar,
+.btn-recusar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-aceitar {
+    background: rgba(74, 124, 89, 0.15);
+    color: var(--cor-sucesso);
+}
+
+.btn-aceitar:hover {
+    background: var(--cor-sucesso);
+    color: #fff;
+}
+
+.btn-recusar {
+    background: rgba(139, 38, 53, 0.1);
+    color: var(--cor-erro);
+}
+
+.btn-recusar:hover {
+    background: var(--cor-erro);
+    color: #fff;
+}
+
+/* ─── Botão adicionar amigo ──────────────────────────────────────────────────── */
+.btn-adicionar-amigo {
+    width: 100%;
+    padding: 11px 16px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--cor-papel-escuro);
+    font-family: var(--fonte-titulo);
+    font-size: 13px;
+    color: var(--cor-couro);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s ease;
+    text-align: center;
+}
+
+.btn-adicionar-amigo:hover {
+    background: rgba(139, 69, 19, 0.06);
+}
+
+/* ─── Favorito somente leitura (friend.html) ─────────────────────────────────── */
+.fav-readonly {
+    font-size: 16px;
+    opacity: 0.85;
 }

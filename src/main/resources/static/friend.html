@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogus — Acervo do Amigo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-left">
+            <span class="nav-quill">✒</span>
+            <span class="nav-brand">Catalogus</span>
+        </div>
+        <div class="nav-center">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="campoBusca" class="search-input"
+                       placeholder="Buscar por título ou autor..."
+                       oninput="filtrarLivros(this.value)">
+                <button id="btnLimparBusca" class="btn-limpar-busca" onclick="limparBusca()" style="display:none;">✕</button>
+            </div>
+        </div>
+        <div class="nav-right">
+            <span id="navUserEmail" class="nav-user"></span>
+            <button onclick="voltarDashboard()" class="btn-logout">← Voltar</button>
+        </div>
+    </div>
+</nav>
+
+<div class="page-wrapper dashboard-wrapper">
+    <div class="dashboard-container">
+
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h2 class="dashboard-title" id="tituloAmigo">Acervo de —</h2>
+                <span id="bookCount" class="book-count">carregando...</span>
+            </div>
+        </div>
+
+        <!-- Abas -->
+        <div class="tab-switcher dashboard-tabs">
+            <button id="tabTodos"      class="tab-btn active" onclick="mudarAba('todos')">📚 Todos</button>
+            <button id="tabLendo"      class="tab-btn"        onclick="mudarAba('lendo')">📖 Lendo</button>
+            <button id="tabFavoritos"  class="tab-btn"        onclick="mudarAba('favoritos')">⭐ Favoritos</button>
+        </div>
+
+        <div class="divider" style="margin-bottom: 32px;">
+            <span class="divider-line"></span>
+            <span class="divider-ornament">❦</span>
+            <span class="divider-line"></span>
+        </div>
+
+        <div id="semResultados" class="sem-resultados" style="display: none;">
+            <span class="empty-icon">🔍</span>
+            <p class="empty-title">Nenhuma obra encontrada</p>
+        </div>
+
+        <div id="booksGrid" class="books-grid">
+            <div class="loading-state">
+                <span class="loading-quill">✒</span>
+                <p>Consultando o acervo...</p>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">📚</span>
+            <p class="empty-title">Acervo vazio</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Detalhes (somente leitura) -->
+<div id="modalDetalhesOverlay" class="modal-overlay" onclick="fecharModalDetalhes(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="detalhesTitulo" class="modal-titulo"></h3>
+            <button onclick="fecharModalDetalhes()" class="btn-fechar">✕</button>
+        </div>
+        <div class="modal-body" style="display:flex; gap:20px;">
+            <img id="detalhesCapa" src="" alt="Capa" style="width:120px; height:170px; object-fit:cover; border-radius:6px;">
+            <div>
+                <p><strong>Autor:</strong> <span id="detalhesAutor"></span></p>
+                <p><strong>ISBN:</strong> <span id="detalhesIsbn"></span></p>
+                <p><strong>Ano:</strong> <span id="detalhesAno"></span></p>
+                <p><strong>Editora:</strong> <span id="detalhesEditora"></span></p>
+                <p><strong>Páginas:</strong> <span id="detalhesPaginas"></span></p>
+                <p><strong>Status:</strong> <span id="detalhesStatus"></span></p>
+                <p><strong>Avaliação:</strong> <span id="detalhesRating"></span></p>
+                <p><strong>Comentário:</strong> <span id="detalhesDescricao"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="message" class="message" role="alert" aria-live="polite"></div>
+
+<script src="friend.js"></script>
+</body>
+</html>

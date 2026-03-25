@@ -1,8 +1,19 @@
 const API_URL = 'http://localhost:8080';
 
-let livrosCached = [];
+let livrosCached  = [];
 let tituloEditando = null;
-let abaAtual = 'biblioteca';
+let abaAtual       = 'biblioteca';
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+window.addEventListener('load', () => {
+    carregarUsuario();
+    carregarLivros();
+    carregarAmigos();
+    carregarPendentes();
+});
+
+// ─── Usuário ──────────────────────────────────────────────────────────────────
 
 function carregarUsuario() {
     const email    = localStorage.getItem('userEmail');
@@ -14,12 +25,200 @@ function carregarUsuario() {
     document.getElementById('navUserEmail').textContent = nickname;
 }
 
+function logout() {
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userNickname');
+    window.location.href = 'index.html';
+}
+
+// ─── Amigos — painel ─────────────────────────────────────────────────────────
+
+function togglePainelAmigos() {
+    const painel = document.getElementById('painelAmigos');
+    const sino   = document.getElementById('painelSino');
+    sino.style.display  = 'none';
+    painel.style.display = painel.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleSino() {
+    const sino   = document.getElementById('painelSino');
+    const amigos = document.getElementById('painelAmigos');
+    amigos.style.display = 'none';
+    sino.style.display   = sino.style.display === 'none' ? 'block' : 'none';
+}
+
+// Fecha painéis ao clicar fora
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-amigos-wrapper')) {
+        document.getElementById('painelAmigos').style.display = 'none';
+    }
+    if (!e.target.closest('.nav-notif-wrapper')) {
+        document.getElementById('painelSino').style.display = 'none';
+    }
+});
+
+// ─── Amigos — carregar lista ──────────────────────────────────────────────────
+
+async function carregarAmigos() {
+    const email = localStorage.getItem('userEmail');
+    try {
+        const response = await fetch(`${API_URL}/friends/list?email=${encodeURIComponent(email)}`);
+        if (!response.ok) return;
+
+        const amigos = await response.json();
+        const lista  = document.getElementById('listaAmigos');
+
+        if (amigos.length === 0) {
+            lista.innerHTML = '<p class="painel-vazio">Nenhum amigo ainda</p>';
+            return;
+        }
+
+        lista.innerHTML = amigos.map(amigo => `
+            <div class="amigo-item" onclick="verAcervoAmigo('${amigo.nickName}')">
+                <span class="amigo-avatar">👤</span>
+                <span class="amigo-nome">${amigo.nickName}</span>
+                <span class="amigo-seta">→</span>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar amigos:', error);
+    }
+}
+
+// ─── Amigos — pendentes ───────────────────────────────────────────────────────
+
+async function carregarPendentes() {
+    const email = localStorage.getItem('userEmail');
+    try {
+        const response = await fetch(`${API_URL}/friends/pending?email=${encodeURIComponent(email)}`);
+        if (!response.ok) return;
+
+        const pendentes  = await response.json();
+        const contador   = document.getElementById('sinoContador');
+        const lista      = document.getElementById('listaPendentes');
+
+        if (pendentes.length === 0) {
+            contador.style.display = 'none';
+            lista.innerHTML = '<p class="painel-vazio">Nenhuma solicitação pendente</p>';
+            return;
+        }
+
+        contador.style.display  = 'flex';
+        contador.textContent    = pendentes.length;
+
+        lista.innerHTML = pendentes.map(p => `
+            <div class="pendente-item">
+                <span class="amigo-avatar">👤</span>
+                <span class="amigo-nome">${p.sender.nickName}</span>
+                <div class="pendente-acoes">
+                    <button class="btn-aceitar" onclick="aceitarSolicitacao(${p.id})">✓</button>
+                    <button class="btn-recusar" onclick="recusarSolicitacao(${p.id})">✕</button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar pendentes:', error);
+    }
+}
+
+// ─── Amigos — ações ───────────────────────────────────────────────────────────
+
+function abrirModalAmigo() {
+    document.getElementById('painelAmigos').style.display = 'none';
+    document.getElementById('campoNicknameAmigo').value   = '';
+    document.getElementById('modalAmigoOverlay').classList.add('aberto');
+}
+
+function fecharModalAmigo() {
+    document.getElementById('modalAmigoOverlay').classList.remove('aberto');
+}
+
+function fecharModalAmigoFora(event) {
+    if (event.target.id === 'modalAmigoOverlay') fecharModalAmigo();
+}
+
+async function enviarSolicitacao() {
+    const email    = localStorage.getItem('userEmail');
+    const nickname = document.getElementById('campoNicknameAmigo').value.trim();
+
+    if (!nickname) {
+        mostrarMensagem('Digite o nickname do amigo.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_URL}/friends/request?senderEmail=${encodeURIComponent(email)}&receiverNickname=${encodeURIComponent(nickname)}`,
+            { method: 'POST' }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            mostrarMensagem('Solicitação enviada!', 'success');
+            fecharModalAmigo();
+        } else {
+            mostrarMensagem(data.message || 'Erro ao enviar solicitação.', 'error');
+        }
+
+    } catch (error) {
+        console.error('Erro ao enviar solicitação:', error);
+        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
+    }
+}
+
+async function aceitarSolicitacao(id) {
+    const email = localStorage.getItem('userEmail');
+    try {
+        const response = await fetch(
+            `${API_URL}/friends/${id}/accept?email=${encodeURIComponent(email)}`,
+            { method: 'PATCH' }
+        );
+
+        if (response.ok) {
+            mostrarMensagem('Solicitação aceita!', 'success');
+            carregarAmigos();
+            carregarPendentes();
+        } else {
+            mostrarMensagem('Erro ao aceitar solicitação.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao aceitar:', error);
+    }
+}
+
+async function recusarSolicitacao(id) {
+    const email = localStorage.getItem('userEmail');
+    try {
+        const response = await fetch(
+            `${API_URL}/friends/${id}/refuse?email=${encodeURIComponent(email)}`,
+            { method: 'PATCH' }
+        );
+
+        if (response.ok) {
+            mostrarMensagem('Solicitação recusada.', 'info');
+            carregarPendentes();
+        } else {
+            mostrarMensagem('Erro ao recusar solicitação.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao recusar:', error);
+    }
+}
+
+function verAcervoAmigo(nickname) {
+    document.getElementById('painelAmigos').style.display = 'none';
+    window.location.href = `friend.html?nickname=${encodeURIComponent(nickname)}`;
+}
+
+// ─── Abas ─────────────────────────────────────────────────────────────────────
+
 function mudarAba(aba) {
     abaAtual = aba;
-
     document.getElementById('tabBiblioteca').classList.toggle('active', aba === 'biblioteca');
     document.getElementById('tabFavoritos').classList.toggle('active',  aba === 'favoritos');
-
     limparBusca();
     renderizarAbaAtual();
 }
@@ -28,14 +227,14 @@ function renderizarAbaAtual() {
     if (abaAtual === 'biblioteca') {
         renderizarCards(livrosCached);
     } else {
-        const favoritos = livrosCached.filter(l => l.favorite);
-        renderizarCards(favoritos, true);
+        renderizarCards(livrosCached.filter(l => l.favorite), true);
     }
 }
 
+// ─── Favoritar ────────────────────────────────────────────────────────────────
+
 async function toggleFavorito(titulo, event) {
     event.stopPropagation();
-
     const email = localStorage.getItem('userEmail');
 
     try {
@@ -46,7 +245,6 @@ async function toggleFavorito(titulo, event) {
 
         if (response.ok) {
             const atualizado = await response.json();
-            // Atualiza cache local sem precisar recarregar tudo
             const idx = livrosCached.findIndex(l => l.title === titulo);
             if (idx !== -1) livrosCached[idx].favorite = atualizado.favorite;
             renderizarAbaAtual();
@@ -55,9 +253,10 @@ async function toggleFavorito(titulo, event) {
         }
     } catch (error) {
         console.error('Erro ao favoritar:', error);
-        mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
+
+// ─── Modal Detalhes ───────────────────────────────────────────────────────────
 
 function fecharModalDetalhes(event) {
     if (!event || event.target.id === 'modalDetalhesOverlay') {
@@ -79,11 +278,7 @@ async function abrirModalDetalhes(livro) {
     document.getElementById('modalDetalhesOverlay').classList.add('aberto');
 }
 
-function logout() {
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userNickname');
-    window.location.href = 'index.html';
-}
+// ─── Carregar livros ──────────────────────────────────────────────────────────
 
 async function carregarLivros() {
     const grid       = document.getElementById('booksGrid');
@@ -97,7 +292,7 @@ async function carregarLivros() {
     emptyState.style.display = 'none';
 
     try {
-        const email = localStorage.getItem('userEmail');
+        const email    = localStorage.getItem('userEmail');
         const response = await fetch(`${API_URL}/book/list?email=${encodeURIComponent(email)}`);
 
         if (response.status === 204) {
@@ -124,39 +319,30 @@ async function carregarLivros() {
 
     } catch (error) {
         console.error('Erro ao carregar livros:', error);
-        grid.innerHTML = `
-            <div class="loading-state">
-                <p>Erro ao carregar o acervo. Verifique o servidor.</p>
-            </div>`;
+        grid.innerHTML = `<div class="loading-state"><p>Erro ao carregar o acervo. Verifique o servidor.</p></div>`;
     }
 }
 
+// ─── Renderizar cards ─────────────────────────────────────────────────────────
+
 function renderizarCards(livros, isFavoritos = false) {
-    const grid          = document.getElementById('booksGrid');
-    const emptyState    = document.getElementById('emptyState');
-    const emptyFav      = document.getElementById('emptyFavoritos');
-    const semResult     = document.getElementById('semResultados');
+    const grid       = document.getElementById('booksGrid');
+    const emptyState = document.getElementById('emptyState');
+    const emptyFav   = document.getElementById('emptyFavoritos');
+    const semResult  = document.getElementById('semResultados');
 
     grid.innerHTML = '';
-    emptyState.style.display  = 'none';
-    emptyFav.style.display    = 'none';
-    semResult.style.display   = 'none';
+    emptyState.style.display = 'none';
+    emptyFav.style.display   = 'none';
+    semResult.style.display  = 'none';
 
     if (livros.length === 0) {
-        if (isFavoritos) {
-            emptyFav.style.display = 'block';
-        } else {
-            emptyState.style.display = 'block';
-        }
+        isFavoritos ? emptyFav.style.display = 'block' : emptyState.style.display = 'block';
         atualizarContador(0, livrosCached.length);
         return;
     }
 
-    livros.forEach((livro, index) => {
-        const card = criarCard(livro, index);
-        grid.appendChild(card);
-    });
-
+    livros.forEach((livro, index) => grid.appendChild(criarCard(livro, index)));
     atualizarContador(livros.length, livrosCached.length);
 }
 
@@ -171,11 +357,10 @@ function criarCard(livro, index = 0) {
     card.className = 'book-card';
     card.style.animationDelay = `${index * 80}ms`;
 
-    const dataLeitura = livro.status === 'LIDO' && livro.readDate
+    const dataLeitura  = livro.status === 'LIDO' && livro.readDate
         ? `<p class="book-meta"><strong>Lido em: </strong><span>${formatarData(livro.readDate)}</span></p>`
         : '';
-
-    const estrelaCls = livro.favorite ? 'btn-favorito ativo' : 'btn-favorito';
+    const estrelaCls   = livro.favorite ? 'btn-favorito ativo' : 'btn-favorito';
     const estrelaLabel = livro.favorite ? '⭐' : '☆';
 
     card.innerHTML = `
@@ -206,11 +391,8 @@ function criarCard(livro, index = 0) {
             </div>
         </div>
         <div class="book-cover">
-            <img
-                src="https://covers.openlibrary.org/b/isbn/${livro.isbn}-M.jpg"
-                alt="Capa de ${livro.title}"
-                onerror="this.style.display='none'"
-            >
+            <img src="https://covers.openlibrary.org/b/isbn/${livro.isbn}-M.jpg"
+                 alt="Capa de ${livro.title}" onerror="this.style.display='none'">
         </div>
     </div>`;
 
@@ -231,80 +413,67 @@ function criarCard(livro, index = 0) {
     return card;
 }
 
-function atualizarCampoPagina() {
-    const status      = document.getElementById('campoStatus').value;
-    const grupoPagina = document.getElementById('grupoPaginaAtual');
-    const grupoData   = document.getElementById('grupoDataLeitura');
+// ─── Status / Rating ──────────────────────────────────────────────────────────
 
-    grupoPagina.style.display = status === 'LENDO' ? 'block' : 'none';
-    grupoData.style.display   = status === 'LIDO'  ? 'block' : 'none';
+function atualizarCampoPagina() {
+    const status = document.getElementById('campoStatus').value;
+    document.getElementById('grupoPaginaAtual').style.display = status === 'LENDO' ? 'block' : 'none';
+    document.getElementById('grupoDataLeitura').style.display = status === 'LIDO'  ? 'block' : 'none';
 }
 
 function exibirEstrelas(rating) {
     if (!rating) return '';
     rating = parseFloat(rating);
-    const cheias = Math.floor(rating);
-    const meia   = rating % 1 >= 0.5 ? '⯪' : '';
-    return '★'.repeat(cheias) + meia;
+    return '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '⯪' : '');
 }
 
-function atualizarEstatisticas(livros) {
-    const total         = livros.length;
-    const autoresUnicos = new Set(livros.map(l => l.author.trim())).size;
-    const comIsbn       = livros.filter(l => l.isbn && l.isbn.trim() !== '').length;
+// ─── Estatísticas ─────────────────────────────────────────────────────────────
 
-    animarNumero('statTotal',   total);
-    animarNumero('statAutores', autoresUnicos);
-    animarNumero('statIsbn',    comIsbn);
+function atualizarEstatisticas(livros) {
+    animarNumero('statTotal',   livros.length);
+    animarNumero('statAutores', new Set(livros.map(l => l.author.trim())).size);
+    animarNumero('statIsbn',    livros.filter(l => l.isbn && l.isbn.trim() !== '').length);
 }
 
 function animarNumero(elementId, valorFinal) {
-    const el         = document.getElementById(elementId);
-    const duracao    = 600;
-    const intervalo  = 16;
-    const passos     = duracao / intervalo;
-    const incremento = valorFinal / passos;
-
+    const el = document.getElementById(elementId);
+    const incremento = valorFinal / (600 / 16);
     let atual = 0;
     const timer = setInterval(() => {
         atual += incremento;
-        if (atual >= valorFinal) {
-            atual = valorFinal;
-            clearInterval(timer);
-        }
+        if (atual >= valorFinal) { atual = valorFinal; clearInterval(timer); }
         el.textContent = Math.floor(atual);
-    }, intervalo);
+    }, 16);
 }
 
-function filtrarLivros(termo) {
-    const grid      = document.getElementById('booksGrid');
-    const semResult = document.getElementById('semResultados');
-    const btnLimpar = document.getElementById('btnLimparBusca');
+// ─── Busca ────────────────────────────────────────────────────────────────────
 
+function filtrarLivros(termo) {
+    const btnLimpar = document.getElementById('btnLimparBusca');
     btnLimpar.style.display = termo.length > 0 ? 'flex' : 'none';
 
     const termoNorm = termo.toLowerCase().trim();
     const base      = abaAtual === 'favoritos' ? livrosCached.filter(l => l.favorite) : livrosCached;
 
     if (!termoNorm) {
-        semResult.style.display = 'none';
+        document.getElementById('semResultados').style.display = 'none';
         renderizarCards(base, abaAtual === 'favoritos');
         return;
     }
 
-    const resultado = base.filter(livro =>
-        livro.title.toLowerCase().includes(termoNorm) ||
-        livro.author.toLowerCase().includes(termoNorm)
+    const resultado = base.filter(l =>
+        l.title.toLowerCase().includes(termoNorm) ||
+        l.author.toLowerCase().includes(termoNorm)
     );
 
     if (resultado.length === 0) {
-        grid.innerHTML = '';
-        semResult.style.display = 'block';
+        document.getElementById('booksGrid').innerHTML = '';
+        document.getElementById('semResultados').style.display = 'block';
         atualizarContador(0, livrosCached.length);
         return;
     }
 
-    semResult.style.display = 'none';
+    document.getElementById('semResultados').style.display = 'none';
     renderizarCards(resultado, abaAtual === 'favoritos');
 }
 
@@ -317,32 +486,25 @@ function limparBusca() {
 
 function atualizarContador(visiveis, total) {
     const el = document.getElementById('bookCount');
-    if (visiveis === total) {
-        el.textContent = total === 1 ? '1 obra' : `${total} obras`;
-    } else {
-        el.textContent = `${visiveis} de ${total} obras`;
-    }
+    el.textContent = visiveis === total
+        ? (total === 1 ? '1 obra' : `${total} obras`)
+        : `${visiveis} de ${total} obras`;
 }
+
+// ─── ISBN ─────────────────────────────────────────────────────────────────────
 
 async function buscarPorIsbn() {
     const isbn = document.getElementById('campoIsbn').value.trim();
-
-    if (!isbn) {
-        mostrarMensagem('Digite um ISBN para buscar.', 'error');
-        return;
-    }
+    if (!isbn) { mostrarMensagem('Digite um ISBN para buscar.', 'error'); return; }
 
     mostrarMensagem('Buscando livro...', 'info');
 
     try {
         const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-        const data = await response.json();
-        const info = data[`ISBN:${isbn}`];
+        const data     = await response.json();
+        const info     = data[`ISBN:${isbn}`];
 
-        if (!info) {
-            mostrarMensagem('ISBN não encontrado na base de dados.', 'error');
-            return;
-        }
+        if (!info) { mostrarMensagem('ISBN não encontrado na base de dados.', 'error'); return; }
 
         document.getElementById('campoTitulo').value = info.title || '';
         document.getElementById('campoAutor').value  = info.authors?.[0]?.name || '';
@@ -350,10 +512,11 @@ async function buscarPorIsbn() {
         mostrarMensagem('Livro encontrado!', 'success');
 
     } catch (error) {
-        console.error('Erro ao buscar ISBN:', error);
         mostrarMensagem('Erro ao conectar com a base de dados.', 'error');
     }
 }
+
+// ─── Modal Adicionar/Editar ───────────────────────────────────────────────────
 
 function abrirModal() {
     tituloEditando = null;
@@ -398,6 +561,8 @@ function fecharModalFora(event) {
     if (event.target.id === 'modalOverlay') fecharModal();
 }
 
+// ─── Salvar ───────────────────────────────────────────────────────────────────
+
 async function salvarLivro() {
     const titulo      = document.getElementById('campoTitulo').value.trim();
     const autor       = document.getElementById('campoAutor').value.trim();
@@ -409,26 +574,16 @@ async function salvarLivro() {
     const readDate    = document.getElementById('campoReadDate').value || null;
     const email       = localStorage.getItem('userEmail');
 
-    if (!titulo || !autor) {
-        mostrarMensagem('Título e autor são obrigatórios.', 'error');
-        return;
-    }
+    if (!titulo || !autor) { mostrarMensagem('Título e autor são obrigatórios.', 'error'); return; }
 
     const payload = { title: titulo, author: autor, isbn, ownerEmail: email, status, rating, currentPage, description, readDate };
 
     try {
-        let response;
-
-        if (tituloEditando) {
-            response = await fetch(
-                `${API_URL}/book/${encodeURIComponent(tituloEditando)}`,
-                { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
-            );
-        } else {
-            response = await fetch(`${API_URL}/book`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-            });
-        }
+        const response = tituloEditando
+            ? await fetch(`${API_URL}/book/${encodeURIComponent(tituloEditando)}`,
+                { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            : await fetch(`${API_URL}/book`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
         if (response.ok) {
             mostrarMensagem(tituloEditando ? 'Obra atualizada!' : 'Obra adicionada ao acervo!', 'success');
@@ -439,16 +594,15 @@ async function salvarLivro() {
             const data = await response.json().catch(() => ({}));
             mostrarMensagem(data.message || 'Erro ao salvar.', 'error');
         }
-
     } catch (error) {
-        console.error('Erro ao salvar livro:', error);
         mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
 
+// ─── Deletar ──────────────────────────────────────────────────────────────────
+
 async function deletarLivro(titulo) {
     if (!confirm(`Deseja remover "${titulo}" do acervo?`)) return;
-
     const email = localStorage.getItem('userEmail');
 
     try {
@@ -463,22 +617,17 @@ async function deletarLivro(titulo) {
         } else {
             mostrarMensagem('Erro ao remover a obra.', 'error');
         }
-
     } catch (error) {
-        console.error('Erro ao deletar:', error);
         mostrarMensagem('Não foi possível conectar ao servidor.', 'error');
     }
 }
 
+// ─── Mensagem ─────────────────────────────────────────────────────────────────
+
 function mostrarMensagem(texto, tipo = 'info') {
     const el = document.getElementById('message');
-    el.textContent = texto;
-    el.className = `message ${tipo}`;
+    el.textContent   = texto;
+    el.className     = `message ${tipo}`;
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
-
-window.addEventListener('load', () => {
-    carregarUsuario();
-    carregarLivros();
-});
