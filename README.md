@@ -4,7 +4,7 @@ Sistema de gerenciamento de acervo pessoal de livros.
 
 ## Sobre
 O Catalogus permite que usuários cadastrem, organizem e acompanhem 
-suas leituras de forma prática e intuitiva.
+suas leituras de forma prática e intuitiva. O sistema também permite a interação entre esses usuários.
 
 ## Tecnologias
 - Java + Spring Boot
